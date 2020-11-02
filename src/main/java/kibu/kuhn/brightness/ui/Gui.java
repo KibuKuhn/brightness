@@ -47,7 +47,7 @@ class Gui implements IGui {
   }
 
   private TrayIcon createTrayIcon() {
-    trayIcon = new TrayIcon(Icons.getImage("list36"));
+    trayIcon = new TrayIcon(Icons.getImage("brightness36"));
     configure(trayIcon);
     return trayIcon;
   }

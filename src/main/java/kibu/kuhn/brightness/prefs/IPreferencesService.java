@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.Locale;
 import javax.swing.UIManager.LookAndFeelInfo;
 
+import kibu.kuhn.brightness.domain.DisplayUnit;
 import kibu.kuhn.brightness.ui.drop.RootNode;
 
 
@@ -51,6 +52,8 @@ public interface IPreferencesService {
   void setDarkMode(boolean selected);
 
   boolean isDarkMode();
+  
+  DisplayUnit getBrightness(DisplayUnit unit);
 
 }
 

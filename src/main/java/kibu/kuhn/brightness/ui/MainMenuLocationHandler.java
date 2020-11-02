@@ -4,65 +4,65 @@ import java.awt.Point;
 import java.awt.TrayIcon;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+
 import javax.swing.JDialog;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import kibu.kuhn.brightness.prefs.IPreferencesService;
-import kibu.kuhn.brightness.ui.drop.DropTree;
 
-class MainMenuLocationHandler implements MouseMotionListener {
+class MainMenuLocationHandler implements MouseMotionListener
+{
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(MainMenuLocationHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MainMenuLocationHandler.class);
 
-  private JDialog dialog;
+    private JDialog dialog;
 
-  private MouseEvent mouseEvent;
+    private MouseEvent mouseEvent;
 
-  private DropTree tree;
-
-  MainMenuLocationHandler(MouseEvent e, JDialog dialog, DropTree tree) {
-    this.mouseEvent = e;
-    this.dialog = dialog;
-    this.tree = tree;
-  }
-
-  @Override
-  public void mouseDragged(MouseEvent e) {
-    var locationOnScreen = e.getLocationOnScreen();
-    LOGGER.debug("locationOnScreen: {}", locationOnScreen);
-    dialog.setLocation(locationOnScreen);
-  }
-
-  @Override
-  public void mouseMoved(MouseEvent e) {
-
-  }
-
-  void initLocation() {
-    var locationOnScreen = (Point) null;
-    if (IPreferencesService.get().isMainMenuLocationUpdatEnabled()) {
-      tree.addMouseMotionListener(this);
-    } else {
-      var trayIcon = (TrayIcon) mouseEvent.getSource();
-      locationOnScreen = mouseEvent.getLocationOnScreen();
-      var size = trayIcon.getSize();
-      if (IPreferencesService.get().getMainMenuLocation() == null) {
-        locationOnScreen.y = locationOnScreen.y + size.height;
-        locationOnScreen.x = locationOnScreen.x - size.width / 2;
-      } else {
-        locationOnScreen = IPreferencesService.get().getMainMenuLocation();
-      }
+    MainMenuLocationHandler(MouseEvent e, JDialog dialog) {
+        this.mouseEvent = e;
+        this.dialog = dialog;
     }
 
-    if (locationOnScreen == null) {
-      dialog.setLocationRelativeTo(null);
-    } else {
-      dialog.setLocation(locationOnScreen);
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        var locationOnScreen = e.getLocationOnScreen();
+        LOGGER.debug("locationOnScreen: {}", locationOnScreen);
+        dialog.setLocation(locationOnScreen);
     }
-  }
 
-  void saveLocation() {
-    IPreferencesService.get().saveMainMenuLocation(dialog.getLocationOnScreen());
-  }
+    @Override
+    public void mouseMoved(MouseEvent e) {
+
+    }
+
+    void initLocation() {
+        Point locationOnScreen = null;
+        if (IPreferencesService.get().isMainMenuLocationUpdatEnabled()) {
+            // TODO
+            // tree.addMouseMotionListener(this);
+        } else {
+            var trayIcon = (TrayIcon) mouseEvent.getSource();
+            locationOnScreen = mouseEvent.getLocationOnScreen();
+            var size = trayIcon.getSize();
+            if (IPreferencesService.get().getMainMenuLocation() == null) {
+                locationOnScreen.y = locationOnScreen.y + size.height;
+                locationOnScreen.x = locationOnScreen.x - size.width / 2;
+            } else {
+                locationOnScreen = IPreferencesService.get().getMainMenuLocation();
+            }
+        }
+
+        if (locationOnScreen == null) {
+            dialog.setLocationRelativeTo(null);
+        } else {
+            dialog.setLocation(locationOnScreen);
+        }
+    }
+
+    void saveLocation() {
+        IPreferencesService.get().saveMainMenuLocation(dialog.getLocationOnScreen());
+    }
 }
