@@ -1,59 +1,45 @@
 package kibu.kuhn.brightness.prefs;
 
 import java.awt.Point;
-import java.io.File;
 import java.util.Locale;
+
 import javax.swing.UIManager.LookAndFeelInfo;
 
 import kibu.kuhn.brightness.domain.DisplayUnit;
-import kibu.kuhn.brightness.ui.drop.RootNode;
 
+public interface IPreferencesService
+{
 
-public interface IPreferencesService {
+    void saveLaf(LookAndFeelInfo laf);
 
-  @SuppressWarnings("exports")
-  void saveItems(RootNode node);
+    void saveLocale(Locale locale);
 
-  @SuppressWarnings("exports")
-  RootNode getItems();
+    LookAndFeelInfo getLaf();
 
-  @SuppressWarnings("exports")
-  void saveLaf(LookAndFeelInfo laf);
+    Locale getLocale();
 
-  void saveLocale(Locale locale);
+    static IPreferencesService get() {
+        return PreferencesService.get();
+    }
 
-  @SuppressWarnings("exports")
-  LookAndFeelInfo getLaf();
+    boolean isMainMenuLocationUpdatEnabled();
 
-  Locale getLocale();
+    void setMainMenuLocationUpdateEnabled(boolean enabled);
 
-  static IPreferencesService get() {
-    return PreferencesService.get();
-  }
+    void saveMainMenuLocation(Point locationOnScreen);
 
-  File getExportPath();
+    Point getMainMenuLocation();
 
-  void saveExportPath(String absolutePath);
+    void setDarkMode(boolean selected);
 
-  void saveConfirmDeleteItem(boolean selected);
+    boolean isDarkMode();
 
-  boolean isConfirmDeleteItem();
+    DisplayUnit getBrightness(DisplayUnit unit);
 
-  boolean isMainMenuLocationUpdatEnabled();
+    void setBrightness(DisplayUnit unit);
 
-  void setMainMenuLocationUpdateNabled(boolean enabled);
+    boolean isAllUnits();
 
-  @SuppressWarnings("exports")
-  void saveMainMenuLocation(Point locationOnScreen);
-
-  @SuppressWarnings("exports")
-  Point getMainMenuLocation();
-
-  void setDarkMode(boolean selected);
-
-  boolean isDarkMode();
-  
-  DisplayUnit getBrightness(DisplayUnit unit);
+    void setAllUnits(boolean selected);
 
 }
-

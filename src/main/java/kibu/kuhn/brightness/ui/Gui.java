@@ -16,6 +16,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import kibu.kuhn.brightness.event.XEventQueue;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
 
 class Gui implements IGui {

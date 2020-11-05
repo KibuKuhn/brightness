@@ -3,16 +3,20 @@ package kibu.kuhn.brightness.ui;
 import java.awt.Point;
 import java.awt.TrayIcon;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 
 import javax.swing.JDialog;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
+
+import kibu.kuhn.brightness.event.EventBusSupport;
+import kibu.kuhn.brightness.event.IEventbus;
+import kibu.kuhn.brightness.event.MainMenuPositionEvent;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
 
-class MainMenuLocationHandler implements MouseMotionListener
+class MainMenuLocationHandler implements EventBusSupport
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainMenuLocationHandler.class);
@@ -24,26 +28,23 @@ class MainMenuLocationHandler implements MouseMotionListener
     MainMenuLocationHandler(MouseEvent e, JDialog dialog) {
         this.mouseEvent = e;
         this.dialog = dialog;
+        IEventbus.get().register(this);
+        initLocation();
     }
 
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        var locationOnScreen = e.getLocationOnScreen();
-        LOGGER.debug("locationOnScreen: {}", locationOnScreen);
-        dialog.setLocation(locationOnScreen);
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-
-    }
-
-    void initLocation() {
-        Point locationOnScreen = null;
+    @Subscribe
+    void mainMenuPositionChanged(MainMenuPositionEvent e) {
         if (IPreferencesService.get().isMainMenuLocationUpdatEnabled()) {
-            // TODO
-            // tree.addMouseMotionListener(this);
-        } else {
+            var delegate = e.getDelegate();
+            var locationOnScreen = delegate.getLocationOnScreen();
+            LOGGER.debug("locationOnScreen: {}", locationOnScreen);
+            dialog.setLocation(locationOnScreen);
+        }
+    }
+
+    private void initLocation() {
+        Point locationOnScreen = null;
+        if (!IPreferencesService.get().isMainMenuLocationUpdatEnabled()) {
             var trayIcon = (TrayIcon) mouseEvent.getSource();
             locationOnScreen = mouseEvent.getLocationOnScreen();
             var size = trayIcon.getSize();
@@ -64,5 +65,11 @@ class MainMenuLocationHandler implements MouseMotionListener
 
     void saveLocation() {
         IPreferencesService.get().saveMainMenuLocation(dialog.getLocationOnScreen());
+    }
+
+    @Override
+    public void unregister() {
+        IEventbus.get().unregister(this);
+
     }
 }

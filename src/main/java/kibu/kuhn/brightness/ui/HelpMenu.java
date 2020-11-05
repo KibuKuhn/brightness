@@ -1,6 +1,7 @@
 package kibu.kuhn.brightness.ui;
 
 import static java.awt.Dialog.ModalityType.APPLICATION_MODAL;
+
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.event.ComponentEvent;
@@ -18,152 +19,155 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class HelpMenu {
+import kibu.kuhn.brightness.ui.component.XHTMLEditorKit;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(HelpMenu.class);
+class HelpMenu
+{
 
-  private JDialog dialog;
-  private JEditorPane htmlPane;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HelpMenu.class);
 
-  private Consumer<? super ComponentEvent> windowCloseAction;
+    private JDialog dialog;
+    private JEditorPane htmlPane;
 
-  HelpMenu() {
-    try {
-      init();
-    } catch (IOException ex) {
-      LOGGER.error(ex.getMessage(), ex);
-      throw new IllegalStateException(ex);
-    }
-  }
+    private Consumer<? super ComponentEvent> windowCloseAction;
 
-  void setDialogVisible(boolean visible) {
-    if (dialog == null) {
-      return;
-    }
-    if (!visible) {
-      dialog.setVisible(false);
-      return;
-    }
-
-    dialog.setVisible(visible);
-  }
-
-
-  private void init() throws IOException {
-    dialog =
-        new JDialog(null, IGui.get().getI18n("helpmenu.title"), APPLICATION_MODAL);
-
-    dialog.addWindowListener(new WindowAdapter() {
-      @Override
-      public void windowClosing(WindowEvent e) {
-        doClose(e);
-      };
-    });
-
-    dialog.setIconImage(Icons.getImage("list36_filled"));
-    var pane = (JPanel) dialog.getContentPane();
-    pane.setLayout(new BorderLayout());
-    htmlPane = new JEditorPane();
-    htmlPane.setEditorKit(new XHTMLEditorKit());
-    htmlPane.setEditable(false);
-    htmlPane.setOpaque(true);
-    htmlPane.setText(getText());
-    htmlPane.setCaretPosition(0);
-    htmlPane.addHyperlinkListener(new HyperlinkListener() {
-
-      @Override
-      public void hyperlinkUpdate(HyperlinkEvent e) {
-        if (HyperlinkEvent.EventType.ACTIVATED.toString().equals(e.getEventType().toString())) {
-          URL url = e.getURL();
-          openLink(url);
+    HelpMenu(JDialog parent) {
+        try {
+            init(parent);
+        } catch (IOException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            throw new IllegalStateException(ex);
         }
-      }
-    });
-
-    pane.add(new JScrollPane(htmlPane));
-
-    dialog.pack();
-    dialog.setSize(500, 400);
-    dialog.setLocationRelativeTo(null);
-  }
-
-  private void doClose(WindowEvent e) {
-    dialog.dispose();
-    dialog = null;
-
-    if (windowCloseAction == null) {
-      return;
     }
-    windowCloseAction.accept(e);
-  }
 
-  void setWindowCloseAction(Consumer<? super ComponentEvent> c) {
-    this.windowCloseAction = c;
-  }
+    void setDialogVisible(boolean visible) {
+        if (dialog == null) {
+            return;
+        }
+        if (!visible) {
+            dialog.setVisible(false);
+            dialog.dispose();
+            return;
+        }
 
-  private String getText() {
-    var reader = new BufferedReader(new InputStreamReader(getStream(), StandardCharsets.UTF_8));
+        dialog.setVisible(visible);
+    }
+
+    private void init(JDialog parent) throws IOException {
+        dialog = new JDialog(parent, IGui.get().getI18n("helpmenu.title"), APPLICATION_MODAL);
+        dialog.setModal(false);
+        dialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                doClose(e);
+            };
+        });
+
+        dialog.setIconImage(Icons.getImage("list36_filled"));
+        var pane = (JPanel) dialog.getContentPane();
+        pane.setLayout(new BorderLayout());
+        htmlPane = new JEditorPane();
+        htmlPane.setEditorKit(new XHTMLEditorKit());
+        htmlPane.setEditable(false);
+        htmlPane.setOpaque(true);
+        htmlPane.setText(getText());
+        htmlPane.setCaretPosition(0);
+        htmlPane.addHyperlinkListener(new HyperlinkListener() {
+
+            @Override
+            public void hyperlinkUpdate(HyperlinkEvent e) {
+                if (HyperlinkEvent.EventType.ACTIVATED.toString().equals(e.getEventType().toString())) {
+                    URL url = e.getURL();
+                    openLink(url);
+                }
+            }
+        });
+
+        pane.add(new JScrollPane(htmlPane));
+
+        dialog.pack();
+        dialog.setSize(500, 400);
+        dialog.setLocationRelativeTo(null);
+    }
+
+    private void doClose(WindowEvent e) {
+        dialog.dispose();
+        dialog = null;
+
+        if (windowCloseAction == null) {
+            return;
+        }
+        windowCloseAction.accept(e);
+    }
+
+    void setWindowCloseAction(Consumer<? super ComponentEvent> c) {
+        this.windowCloseAction = c;
+    }
+
+    private String getText() {
+        var reader = new BufferedReader(new InputStreamReader(getStream(), StandardCharsets.UTF_8));
     //@formatter:off
     var html = reader.lines()
                         .map(new ImageUrlGenerator())
                         .collect(Collectors.joining("\n"));
     //@formatter:on
-    return html;
-  }
-
-  private InputStream getStream() {
-    return getClass().getResourceAsStream("/" + IGui.get().getI18n("help.html"));
-  }
-
-  private void openLink(URL url) {
-    if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-      try {
-        Desktop.getDesktop().browse(url.toURI());
-      } catch (Exception e) {
-        LOGGER.error(e.getMessage(), e);
-        htmlPane.setText(String.format(IGui.get().getI18n("HelpPane.error"), e.getLocalizedMessage()));
-      }
-    }
-    else {
-      htmlPane.setText(IGui.get().getI18n("HelpPane.System.Web.Browser.not.supported"));
+        return html;
     }
 
-  }
-
-  private static class ImageUrlGenerator implements Function<String, String> {
-
-    private static Set<String> images = new HashSet<>();
-    static {
-      Collections.addAll(images, "FAVORITES18", "MENU18", "HELP18", "CANCEL18", "LIST36ERROR");
+    private InputStream getStream() {
+        return getClass().getResourceAsStream("/" + IGui.get().getI18n("help.html"));
     }
 
-
-    @Override
-    public String apply(String line) {
-      if (!line.contains("<img")) {
-        return line;
-      }
-      for (String img : images) {
-        if (line.contains(img)) {
-          line = line.replace(img, getImgeUrl(img));
+    private void openLink(URL url) {
+        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+            try {
+                Desktop.getDesktop().browse(url.toURI());
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+                htmlPane.setText(String.format(IGui.get().getI18n("HelpPane.error"), e.getLocalizedMessage()));
+            }
+        } else {
+            htmlPane.setText(IGui.get().getI18n("HelpPane.System.Web.Browser.not.supported"));
         }
-      };
-      return line;
+
     }
 
+    private static class ImageUrlGenerator implements Function<String, String>
+    {
 
-    private CharSequence getImgeUrl(String img) {
-      var imagename = img.toLowerCase();
-      return getClass().getResource("/" + imagename + ".png").toString();
+        private static Set<String> images = new HashSet<>();
+        static {
+            Collections.addAll(images, "FAVORITES18", "MENU18", "HELP18", "CANCEL18", "LIST36ERROR");
+        }
+
+        @Override
+        public String apply(String line) {
+            if (!line.contains("<img")) {
+                return line;
+            }
+            for (String img : images) {
+                if (line.contains(img)) {
+                    line = line.replace(img, getImgeUrl(img));
+                }
+            }
+            ;
+            return line;
+        }
+
+        private CharSequence getImgeUrl(String img) {
+            var imagename = img.toLowerCase();
+            return getClass().getResource("/" + imagename + ".png").toString();
+        }
     }
-  }
 }
