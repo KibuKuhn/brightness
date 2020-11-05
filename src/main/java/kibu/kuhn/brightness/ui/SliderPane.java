@@ -1,7 +1,6 @@
 package kibu.kuhn.brightness.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.util.HashSet;
@@ -58,27 +57,16 @@ public class SliderPane extends JPanel implements EventBusSupport
         var model = new DefaultBoundedRangeModel();
         model.setMinimum(20);
         model.setValue(unit.getValue());
-        var label = new JLabel(unit.getName());
         var slider = new JSlider(JSlider.VERTICAL);
         slider.setModel(model);
         sliders.add(slider);
-
-        JPanel pane = null;
-        if (index > 0) {
-            pane = new JPanel() {
-
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public Insets getInsets() {
-                    var insets = super.getInsets();
-                    insets.left = 10;
-                    return insets;
-                }
-            };
-        } else {
-            pane = new JPanel();
+        JPanel pane = new JPanel();
+        pane.setLayout(new BorderLayout());
+        pane.add(slider);
+        JLabel label = null;
+        if (index == 0) {
             firstSlider = slider;
+            label = new JLabel(unit.getName());
             label.addMouseMotionListener(new MouseMotionAdapter() {
 
                 @Override
@@ -86,10 +74,12 @@ public class SliderPane extends JPanel implements EventBusSupport
                     IEventbus.get().post(new MainMenuPositionEvent(e));
                 }
             });
+        } else {
+            label = new JLabel("  " + unit.getName());
+            pane.add(new LinkLabel(), BorderLayout.WEST);
         }
-        pane.setLayout(new BorderLayout());
-        pane.add(slider);
         pane.add(label, BorderLayout.NORTH);
+
         if (isAllUnits && index == 0) {
             model.addChangeListener(event -> handleChangeEvent(event, unit));
         } else if (!isAllUnits) {

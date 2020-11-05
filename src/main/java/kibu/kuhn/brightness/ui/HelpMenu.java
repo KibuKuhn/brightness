@@ -66,7 +66,7 @@ class HelpMenu
 
     private void init(JDialog parent) throws IOException {
         dialog = new JDialog(parent, IGui.get().getI18n("helpmenu.title"), APPLICATION_MODAL);
-        dialog.setModal(false);
+        dialog.setModal(parent != null);
         dialog.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -148,7 +148,7 @@ class HelpMenu
 
         private static Set<String> images = new HashSet<>();
         static {
-            Collections.addAll(images, "FAVORITES18", "MENU18", "HELP18", "CANCEL18", "LIST36ERROR");
+            Collections.addAll(images, "BRIGHTNESS36", "ERROR36");
         }
 
         @Override
