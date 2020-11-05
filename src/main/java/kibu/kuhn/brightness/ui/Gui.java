@@ -10,111 +10,114 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Locale;
 import java.util.ResourceBundle;
+
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import kibu.kuhn.brightness.event.XEventQueue;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
 
-class Gui implements IGui {
+class Gui implements IGui
+{
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(Gui.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Gui.class);
 
-  private static final IGui GUI = new Gui();
+    private static final IGui GUI = new Gui();
 
-  static IGui get() {
-    return GUI;
-  }
-
-  private ResourceBundle bundle;
-  private TrayIcon trayIcon;
-
-  private Gui() {
-    initI18n();
-  }
-
-  @Override
-  public String getI18n(String key) {
-    return bundle.getString(key);
-  }
-
-  private void configure(TrayIcon trayIcon) {
-    trayIcon.setImageAutoSize(true);
-    trayIcon.setToolTip(bundle.getString("trayicon.tooltip"));
-    trayIcon.addMouseListener(new MainMenu());
-  }
-
-  private TrayIcon createTrayIcon() {
-    trayIcon = new TrayIcon(Icons.getImage("brightness36"));
-    configure(trayIcon);
-    return trayIcon;
-  }
-
-  @Override
-  public void init() {
-    try {
-      UIManager.put("swing.boldMetal", Boolean.FALSE);
-      Toolkit.getDefaultToolkit().getSystemEventQueue()
-          .push(new XEventQueue(this::handleEventQueueException));
-      LookAndFeelInfo laf = IPreferencesService.get().getLaf();
-      UIManager.setLookAndFeel(laf.getClassName());
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-        | UnsupportedLookAndFeelException ex) {
-      throw new IllegalStateException(ex.getMessage(), ex);
-    }
-    SystemTray tray = SystemTray.getSystemTray();
-    TrayIcon trayIcon = createTrayIcon();
-
-    try {
-      tray.add(trayIcon);
-    } catch (AWTException e) {
-      LOGGER.error("TrayIcon could not be added.");
-      return;
-    }
-  }
-
-  private void initI18n() {
-    Locale locale = IPreferencesService.get().getLocale();
-    Locale.setDefault(locale);
-    bundle = ResourceBundle.getBundle("i18n");
-  }
-
-  @Override
-  public boolean checkSupport() {
-    if (!SystemTray.isSupported()) {
-      LOGGER.error("SystemTray is not supported");
-      return false;
+    static IGui get() {
+        return GUI;
     }
 
-    if (!Desktop.isDesktopSupported()) {
-      LOGGER.error("Desktop is not supported");
-      return false;
+    private ResourceBundle bundle;
+    private TrayIcon trayIcon;
+
+    private Gui() {
+        initI18n();
     }
-
-    return true;
-  }
-
-  private void handleEventQueueException(Throwable th) {
-    trayIcon.setImage(Icons.getImage("list36error"));
-    String message = bundle.getString("trayicon.tooltip.error");
-    trayIcon.setToolTip(message);
-    trayIcon.displayMessage(bundle.getString("trayicon.error.caption"), message
-        + String.format(bundle.getString("trayicon.error.ex"), th.getLocalizedMessage()),
-        MessageType.ERROR);
-    trayIcon.addMouseListener(new ExitHandler());
-  }
-
-  private static class ExitHandler extends MouseAdapter {
 
     @Override
-    public void mouseClicked(MouseEvent e) {
-      if (e.getButton() == MouseEvent.BUTTON1 && e.getModifiersEx() == MouseEvent.CTRL_DOWN_MASK) {
-        System.exit(0);
-      }
+    public String getI18n(String key) {
+        return bundle.getString(key);
     }
 
-  }
+    private void configure(TrayIcon trayIcon) {
+        trayIcon.setImageAutoSize(true);
+        trayIcon.setToolTip(bundle.getString("trayicon.tooltip"));
+        trayIcon.addMouseListener(new MainMenu());
+    }
+
+    private TrayIcon createTrayIcon() {
+        trayIcon = new TrayIcon(Icons.getImage("brightness36"));
+        configure(trayIcon);
+        return trayIcon;
+    }
+
+    @Override
+    public void init() {
+        try {
+            UIManager.put("swing.boldMetal", Boolean.FALSE);
+            Toolkit.getDefaultToolkit().getSystemEventQueue().push(new XEventQueue(this::handleEventQueueException));
+            LookAndFeelInfo laf = IPreferencesService.get().getLaf();
+            UIManager.setLookAndFeel(laf.getClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                | UnsupportedLookAndFeelException ex) {
+            throw new IllegalStateException(ex.getMessage(), ex);
+        }
+        SystemTray tray = SystemTray.getSystemTray();
+        TrayIcon trayIcon = createTrayIcon();
+
+        try {
+            tray.add(trayIcon);
+        } catch (AWTException e) {
+            LOGGER.error("TrayIcon could not be added.");
+            return;
+        }
+    }
+
+    private void initI18n() {
+        Locale locale = IPreferencesService.get().getLocale();
+        Locale.setDefault(locale);
+        bundle = ResourceBundle.getBundle("i18n");
+    }
+
+    @Override
+    public boolean checkSupport() {
+        if (!SystemTray.isSupported()) {
+            LOGGER.error("SystemTray is not supported");
+            return false;
+        }
+
+        if (!Desktop.isDesktopSupported()) {
+            LOGGER.error("Desktop is not supported");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void handleEventQueueException(Throwable th) {
+        trayIcon.setImage(Icons.getImage("error36"));
+        String message = bundle.getString("trayicon.tooltip.error");
+        trayIcon.setToolTip(message);
+        trayIcon.displayMessage(bundle.getString("trayicon.error.caption"),
+                message + String.format(bundle.getString("trayicon.error.ex"), th.getLocalizedMessage()),
+                MessageType.ERROR);
+        trayIcon.addMouseListener(new ExitHandler());
+    }
+
+    private static class ExitHandler extends MouseAdapter
+    {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getButton() == MouseEvent.BUTTON1 && e.getModifiersEx() == MouseEvent.CTRL_DOWN_MASK) {
+                System.exit(0);
+            }
+        }
+
+    }
 }

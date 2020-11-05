@@ -40,7 +40,8 @@ class MainMenu extends MouseAdapter
     }
 
     private HelpMenu createHelpMenu() {
-        var menu = new HelpMenu(settingsMenu.getDialog());
+        JDialog parent = settingsMenu == null ? null : settingsMenu.getDialog();
+        var menu = new HelpMenu(parent);
         menu.setWindowCloseAction(e -> helpMenu = null);
         return menu;
     }
