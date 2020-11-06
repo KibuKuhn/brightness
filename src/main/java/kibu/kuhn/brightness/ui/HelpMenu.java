@@ -148,7 +148,7 @@ class HelpMenu
 
         private static Set<String> images = new HashSet<>();
         static {
-            Collections.addAll(images, "BRIGHTNESS36", "ERROR36");
+            Collections.addAll(images, "BRIGHTNESS36_FILLED", "ERROR36");
         }
 
         @Override
