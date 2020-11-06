@@ -2,7 +2,7 @@
 
 A brightness control app for Solus Linux
 
-Until now Solus has now app to control the display brightness. <i>brightness</i> uses xrandr to manage the display brightness.<br>
+Until now Solus has no app to control the display brightness. <i>brightness</i> uses xrandr to manage the display brightness.<br>
 <img src="sliders.png"></img><br>
 See src/main/resources/help.html for details.
 
