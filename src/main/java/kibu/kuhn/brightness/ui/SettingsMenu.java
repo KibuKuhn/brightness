@@ -94,7 +94,7 @@ public class SettingsMenu
         });
 
         // l&f
-        dialog.setIconImage(Icons.getImage("list36_filled"));
+        dialog.setIconImage(Icons.getImage("brightness36_filled"));
         var pane = dialog.getContentPane();
         pane.setLayout(new GridBagLayout());
         var constraints = new GridBagConstraints();
