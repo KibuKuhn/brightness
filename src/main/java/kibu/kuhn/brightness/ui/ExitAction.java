@@ -3,6 +3,9 @@ package kibu.kuhn.brightness.ui;
 import java.awt.event.ActionEvent;
 import java.util.function.Consumer;
 
+import kibu.kuhn.brightness.utils.Injection;
+
+@Injection
 public class ExitAction extends AbstractMenuAction
 {
 
@@ -10,7 +13,7 @@ public class ExitAction extends AbstractMenuAction
 
     public ExitAction(Consumer<? super ActionEvent> action) {
         super(action);
-        putValue(NAME, IGui.get().getI18n("settingsmenu.button.exit"));
-        putValue(SMALL_ICON, Icons.getIcon("cancel18"));
+        putValue(NAME, i18n.get("settingsmenu.button.exit"));
+        putValue(SMALL_ICON, icons.getIcon("cancel18"));
     }
 }

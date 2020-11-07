@@ -1,15 +1,9 @@
 package kibu.kuhn.brightness.ui;
 
-public interface IGui {
+public interface IGui
+{
+    void init();
 
-  String getI18n(String key);
-
-  void init();
-
-  boolean checkSupport();
-
-  static IGui get() {
-    return Gui.get();
-  }
+    boolean checkSupport();
 
 }

@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.swing.BoundedRangeModel;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultBoundedRangeModel;
@@ -20,20 +21,28 @@ import com.google.common.eventbus.Subscribe;
 import kibu.kuhn.brightness.displayunit.IDisplayUnitManager;
 import kibu.kuhn.brightness.domain.DisplayUnit;
 import kibu.kuhn.brightness.event.AllUnitsEvent;
-import kibu.kuhn.brightness.event.BrightnessEvent;
 import kibu.kuhn.brightness.event.EventBusSupport;
 import kibu.kuhn.brightness.event.IEventbus;
 import kibu.kuhn.brightness.event.MainMenuPositionEvent;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
+import kibu.kuhn.brightness.utils.Injection;
 
+@Injection
 public class SliderPane extends JPanel implements EventBusSupport
 {
 
     private static final long serialVersionUID = 1L;
+
     private boolean isAllUnits;
     private List<DisplayUnit> units;
     private Set<JSlider> sliders;
     private JSlider firstSlider;
+    @Inject
+    private IEventbus eventbus;
+    @Inject
+    private IPreferencesService preferences;
+    @Inject
+    private IDisplayUnitManager displayUnitManager;
 
     public SliderPane() {
         init();
@@ -41,10 +50,10 @@ public class SliderPane extends JPanel implements EventBusSupport
 
     private void init() {
         sliders = new HashSet<>();
-        IEventbus.get().register(this);
-        isAllUnits = IPreferencesService.get().isAllUnits();
+        eventbus.register(this);
+        isAllUnits = preferences.isAllUnits();
         this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        units = IDisplayUnitManager.get().getDisplayUnits();
+        units = displayUnitManager.getDisplayUnits();
         for (int i = 0; i < units.size(); i++) {
             initSliders(units.get(i), i);
         }
@@ -53,7 +62,7 @@ public class SliderPane extends JPanel implements EventBusSupport
     }
 
     private void initSliders(DisplayUnit displayUnit, int index) {
-        var unit = IPreferencesService.get().getBrightness(displayUnit);
+        var unit = preferences.getBrightness(displayUnit);
         var model = new DefaultBoundedRangeModel();
         model.setMinimum(20);
         model.setValue(unit.getValue());
@@ -71,7 +80,7 @@ public class SliderPane extends JPanel implements EventBusSupport
 
                 @Override
                 public void mouseDragged(MouseEvent e) {
-                    IEventbus.get().post(new MainMenuPositionEvent(e));
+                    eventbus.post(new MainMenuPositionEvent(e));
                 }
             });
         } else {
@@ -102,14 +111,14 @@ public class SliderPane extends JPanel implements EventBusSupport
         if (!source.getValueIsAdjusting()) {
             if (isAllUnits) {
                 units.forEach(u -> {
-                    DisplayUnit unit2 = new DisplayUnit(u.getName(), du.getValue());
-                    IPreferencesService.get().setBrightness(unit2);
+                    var unit2 = new DisplayUnit(u.getName(), du.getValue());
+                    preferences.setBrightness(unit2);
                 });
             } else {
-                IPreferencesService.get().setBrightness(du);
+                preferences.setBrightness(du);
             }
         }
-        IEventbus.get().post(new BrightnessEvent(du));
+        displayUnitManager.updateBrightness(du);
     }
 
     private void updateLinkedSliders(DisplayUnit refUnit) {
@@ -122,7 +131,7 @@ public class SliderPane extends JPanel implements EventBusSupport
 
     @Override
     public void unregister() {
-        IEventbus.get().unregister(this);
+        eventbus.unregister(this);
     }
 
     @Subscribe

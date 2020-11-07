@@ -3,17 +3,23 @@ package kibu.kuhn.brightness.ui;
 import java.awt.Color;
 import java.awt.Dimension;
 
+import javax.inject.Inject;
 import javax.swing.JLabel;
 
 import kibu.kuhn.brightness.prefs.IPreferencesService;
+import kibu.kuhn.brightness.utils.Injection;
 
-class LinkLabel extends JLabel
+@Injection
+public class LinkLabel extends JLabel
 {
     private static final long serialVersionUID = 1L;
     static final int WIDTH = 10;
 
-    LinkLabel() {
-        setText(IPreferencesService.get().isAllUnits() ? "&" : "");
+    @Inject
+    private IPreferencesService preferences;
+
+    public LinkLabel() {
+        setText(preferences.isAllUnits() ? "&" : "");
         setForeground(Color.GREEN);
     }
 

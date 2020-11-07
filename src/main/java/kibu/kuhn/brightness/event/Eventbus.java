@@ -1,27 +1,20 @@
 package kibu.kuhn.brightness.event;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.EventBus;
 
-class Eventbus implements IEventbus
+public class Eventbus implements IEventbus
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(Eventbus.class);
 
-    private static IEventbus eventbus = new Eventbus();
-
     private EventBus eventBus;
 
-    static IEventbus get() {
-        return eventbus;
-    }
-
-    private Eventbus() {
-        init();
-    }
-
-    private void init() {
+    @PostConstruct
+    public void init() {
         eventBus = new EventBus();
     }
 

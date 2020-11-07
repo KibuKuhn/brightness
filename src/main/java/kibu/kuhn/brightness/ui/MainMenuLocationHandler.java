@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.awt.TrayIcon;
 import java.awt.event.MouseEvent;
 
+import javax.inject.Inject;
 import javax.swing.JDialog;
 
 import org.slf4j.Logger;
@@ -15,26 +16,31 @@ import kibu.kuhn.brightness.event.EventBusSupport;
 import kibu.kuhn.brightness.event.IEventbus;
 import kibu.kuhn.brightness.event.MainMenuPositionEvent;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
+import kibu.kuhn.brightness.utils.Injection;
 
-class MainMenuLocationHandler implements EventBusSupport
+@Injection
+public class MainMenuLocationHandler implements EventBusSupport
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainMenuLocationHandler.class);
 
     private JDialog dialog;
-
     private MouseEvent mouseEvent;
+    @Inject
+    private IEventbus eventbus;
+    @Inject
+    private IPreferencesService preferences;
 
-    MainMenuLocationHandler(MouseEvent e, JDialog dialog) {
+    public MainMenuLocationHandler(MouseEvent e, JDialog dialog) {
         this.mouseEvent = e;
         this.dialog = dialog;
-        IEventbus.get().register(this);
+        eventbus.register(this);
         initLocation();
     }
 
     @Subscribe
     void mainMenuPositionChanged(MainMenuPositionEvent e) {
-        if (IPreferencesService.get().isMainMenuLocationUpdatEnabled()) {
+        if (preferences.isMainMenuLocationUpdatEnabled()) {
             var delegate = e.getDelegate();
             var locationOnScreen = delegate.getLocationOnScreen();
             LOGGER.debug("locationOnScreen: {}", locationOnScreen);
@@ -44,15 +50,15 @@ class MainMenuLocationHandler implements EventBusSupport
 
     private void initLocation() {
         Point locationOnScreen = null;
-        if (!IPreferencesService.get().isMainMenuLocationUpdatEnabled()) {
+        if (!preferences.isMainMenuLocationUpdatEnabled()) {
             var trayIcon = (TrayIcon) mouseEvent.getSource();
             locationOnScreen = mouseEvent.getLocationOnScreen();
             var size = trayIcon.getSize();
-            if (IPreferencesService.get().getMainMenuLocation() == null) {
+            if (preferences.getMainMenuLocation() == null) {
                 locationOnScreen.y = locationOnScreen.y + size.height;
                 locationOnScreen.x = locationOnScreen.x - size.width / 2;
             } else {
-                locationOnScreen = IPreferencesService.get().getMainMenuLocation();
+                locationOnScreen = preferences.getMainMenuLocation();
             }
         }
 
@@ -64,12 +70,12 @@ class MainMenuLocationHandler implements EventBusSupport
     }
 
     void saveLocation() {
-        IPreferencesService.get().saveMainMenuLocation(dialog.getLocationOnScreen());
+        preferences.saveMainMenuLocation(dialog.getLocationOnScreen());
     }
 
     @Override
     public void unregister() {
-        IEventbus.get().unregister(this);
+        eventbus.unregister(this);
 
     }
 }

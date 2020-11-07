@@ -1,6 +1,8 @@
 package kibu.kuhn.brightness.prefs;
 
 import java.awt.Point;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.prefs.BackingStoreException;
@@ -15,11 +17,12 @@ import org.slf4j.LoggerFactory;
 import kibu.kuhn.brightness.Brightness;
 import kibu.kuhn.brightness.domain.DisplayUnit;
 
-class PreferencesService implements IPreferencesService
+public class PreferencesService implements IPreferencesService
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PreferencesService.class);
 
+    private static final int DEFAULT_COLOR_TEMP_KELVIN = 5000;
     private static final String DARK_MODE = "darkMode";
     private static final String MAIN_MENU_LOCATION = "mainMenuLocation";
     private static final String MAIN_MENU_LOCATION_UPDATE = "mainMenuLocationUpdate";
@@ -28,14 +31,18 @@ class PreferencesService implements IPreferencesService
     static final String ITEMS = "items";
     private static final String CLEAN = "clean";
     private static final String ALL_UNITS = "allUnits";
+    private static final String COLOR_TEMP_MODE = "colorTempMode";
+    private static final String COLOR_TEMP = "colorTemp";
+    private static final String COLOR_TEMP_AUTO_MODE = "colorTempAutoMode";
+    private static final String COLOR_TEMP_FROM_TIME = "colorTempFromTime";
+    private static final String COLOR_TEMP_TO_TIME = "colorTempToTime";
+    private static final String DEFAULT_COLOR_TEMP_KELVIN_KEY = "defaultColorTempKelvinKey";
+    private static final String LATITUDE = "latitude";
+    private static final String LONGITUDE = "longitude";
 
-    private static IPreferencesService service = new PreferencesService();
+    private static final DateTimeFormatter COLOR_TEMP_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    static IPreferencesService get() {
-        return service;
-    }
-
-    PreferencesService() {
+    public PreferencesService() {
         if (System.getProperty(CLEAN) != null) {
             try {
                 getPreferences().clear();
@@ -71,12 +78,7 @@ class PreferencesService implements IPreferencesService
 
     @Override
     public Locale getLocale() {
-        var locale = getPreferences().get(LOCALE, null);
-        if (locale == null) {
-            return Locale.getDefault();
-        }
-
-        return Locale.forLanguageTag(locale);
+        return Locale.forLanguageTag(getPreferences().get(LOCALE, Locale.getDefault().toLanguageTag()));
     }
 
     @Override
@@ -147,5 +149,87 @@ class PreferencesService implements IPreferencesService
     @Override
     public boolean isAllUnits() {
         return getPreferences().getBoolean(ALL_UNITS, false);
+    }
+
+    @Override
+    public boolean isColorTemp() {
+        return getPreferences().getBoolean(COLOR_TEMP_MODE, false);
+    }
+
+    @Override
+    public void setColorTemp(boolean mode) {
+        getPreferences().putBoolean(COLOR_TEMP_MODE, mode);
+    }
+
+    @Override
+    public int getDefaultColorTempKelvin() {
+        return getPreferences().getInt(DEFAULT_COLOR_TEMP_KELVIN_KEY, DEFAULT_COLOR_TEMP_KELVIN);
+    }
+
+    @Override
+    public int getColorTempKelvin() {
+        return getPreferences().getInt(COLOR_TEMP, DEFAULT_COLOR_TEMP_KELVIN);
+    }
+
+    @Override
+    public void setColorTempKelvin(int kelvin) {
+        getPreferences().putInt(COLOR_TEMP, kelvin);
+    }
+
+    @Override
+    public boolean isColorTempAutoMode() {
+        return getPreferences().getBoolean(COLOR_TEMP_AUTO_MODE, false);
+    }
+
+    @Override
+    public void setColorTempAutoMode(boolean autoMode) {
+        getPreferences().putBoolean(COLOR_TEMP_AUTO_MODE, autoMode);
+    }
+
+    @Override
+    public void setColorTempFromTime(LocalTime time) {
+        getPreferences().put(COLOR_TEMP_FROM_TIME, time.format(COLOR_TEMP_TIME_FORMATTER));
+    }
+
+    @Override
+    public void setColorTempToTime(LocalTime time) {
+        getPreferences().put(COLOR_TEMP_TO_TIME, time.format(COLOR_TEMP_TIME_FORMATTER));
+    }
+
+    @Override
+    public LocalTime getColorTempFromTime() {
+        String from = getPreferences().get(COLOR_TEMP_FROM_TIME, LocalTime.now().format(COLOR_TEMP_TIME_FORMATTER));
+        return LocalTime.parse(from, COLOR_TEMP_TIME_FORMATTER);
+    }
+
+    @Override
+    public LocalTime getColorTempToTime() {
+        String to = getPreferences().get(COLOR_TEMP_TO_TIME, LocalTime.now().format(COLOR_TEMP_TIME_FORMATTER));
+        return LocalTime.parse(to, COLOR_TEMP_TIME_FORMATTER);
+    }
+
+    @Override
+    public void setDefaultColorTempKelvin(int kelvin) {
+        getPreferences().putInt(DEFAULT_COLOR_TEMP_KELVIN_KEY, kelvin);
+    }
+
+    @Override
+    public void setLatitude(double latitude) {
+        getPreferences().putDouble(LATITUDE, latitude);
+    }
+
+    @Override
+    public void setLongitude(double longitude) {
+        getPreferences().putDouble(LONGITUDE, longitude);
+    }
+
+    @Override
+    public double getLatitude() {
+        return getPreferences().getDouble(LATITUDE, 0);
+    }
+
+    @Override
+    public double getLongitude() {
+        return getPreferences().getDouble(LONGITUDE, 0);
     }
 }

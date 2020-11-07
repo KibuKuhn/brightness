@@ -2,17 +2,16 @@ package kibu.kuhn.brightness.displayunit;
 
 import java.util.List;
 
+import kibu.kuhn.brightness.domain.ColorTemp;
 import kibu.kuhn.brightness.domain.DisplayUnit;
 
-public interface IDisplayUnitManager {
+public interface IDisplayUnitManager
+{
+    List<DisplayUnit> getDisplayUnits();
 
-	static IDisplayUnitManager get() {
-		return DisplayUnitManager.get();
-		
-	}
+    void updateBrightness(DisplayUnit unit);
 
-	List<DisplayUnit> getDisplayUnits();
+    void updateColorTemp(ColorTemp colorTemp);
 
-
-
+    void applyColorTemp(ColorTemp ct);
 }
