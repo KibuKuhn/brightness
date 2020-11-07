@@ -42,4 +42,16 @@ public interface IPreferencesService
 
     void setAllUnits(boolean selected);
 
+    boolean isColorTemp();
+
+    void setColorTemp(boolean mode);
+
+    int getColorTempKelvin();
+
+    void setColorTempKelvin(int kelvin);
+
+    boolean isColorTempAutoMode();
+
+    void setColorTempAutoMode(boolean autoMode);
+
 }

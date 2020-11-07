@@ -28,6 +28,9 @@ class PreferencesService implements IPreferencesService
     static final String ITEMS = "items";
     private static final String CLEAN = "clean";
     private static final String ALL_UNITS = "allUnits";
+    private static final String COLOR_TEMP_MODE = "colorTempMode";
+    private static final String COLOR_TEMP = "colorTemp";
+    private static final String COLOR_TEMP_AUTO_MODE = "colorTempAutoMode";
 
     private static IPreferencesService service = new PreferencesService();
 
@@ -147,5 +150,35 @@ class PreferencesService implements IPreferencesService
     @Override
     public boolean isAllUnits() {
         return getPreferences().getBoolean(ALL_UNITS, false);
+    }
+
+    @Override
+    public boolean isColorTemp() {
+        return getPreferences().getBoolean(COLOR_TEMP_MODE, false);
+    }
+
+    @Override
+    public void setColorTemp(boolean mode) {
+        getPreferences().putBoolean(COLOR_TEMP_MODE, mode);
+    }
+
+    @Override
+    public int getColorTempKelvin() {
+        return getPreferences().getInt(COLOR_TEMP, 5000);
+    }
+
+    @Override
+    public void setColorTempKelvin(int kelvin) {
+        getPreferences().putInt(COLOR_TEMP, kelvin);
+    }
+
+    @Override
+    public boolean isColorTempAutoMode() {
+        return getPreferences().getBoolean(COLOR_TEMP_AUTO_MODE, false);
+    }
+
+    @Override
+    public void setColorTempAutoMode(boolean autoMode) {
+        getPreferences().putBoolean(COLOR_TEMP_AUTO_MODE, autoMode);
     }
 }

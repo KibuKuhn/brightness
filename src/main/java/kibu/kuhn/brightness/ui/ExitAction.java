@@ -10,7 +10,7 @@ public class ExitAction extends AbstractMenuAction
 
     public ExitAction(Consumer<? super ActionEvent> action) {
         super(action);
-        putValue(NAME, IGui.get().getI18n("settingsmenu.button.exit"));
+        putValue(NAME, IGui.getI18n("settingsmenu.button.exit"));
         putValue(SMALL_ICON, Icons.getIcon("cancel18"));
     }
 }

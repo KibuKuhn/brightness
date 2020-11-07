@@ -65,7 +65,7 @@ class HelpMenu
     }
 
     private void init(JDialog parent) throws IOException {
-        dialog = new JDialog(parent, IGui.get().getI18n("helpmenu.title"), APPLICATION_MODAL);
+        dialog = new JDialog(parent, IGui.getI18n("helpmenu.title"), APPLICATION_MODAL);
         dialog.setModal(parent != null);
         dialog.addWindowListener(new WindowAdapter() {
             @Override
@@ -126,7 +126,7 @@ class HelpMenu
     }
 
     private InputStream getStream() {
-        return getClass().getResourceAsStream("/" + IGui.get().getI18n("help.html"));
+        return getClass().getResourceAsStream("/" + IGui.getI18n("help.html"));
     }
 
     private void openLink(URL url) {
@@ -135,10 +135,10 @@ class HelpMenu
                 Desktop.getDesktop().browse(url.toURI());
             } catch (Exception e) {
                 LOGGER.error(e.getMessage(), e);
-                htmlPane.setText(String.format(IGui.get().getI18n("HelpPane.error"), e.getLocalizedMessage()));
+                htmlPane.setText(String.format(IGui.getI18n("HelpPane.error"), e.getLocalizedMessage()));
             }
         } else {
-            htmlPane.setText(IGui.get().getI18n("HelpPane.System.Web.Browser.not.supported"));
+            htmlPane.setText(IGui.getI18n("HelpPane.System.Web.Browser.not.supported"));
         }
 
     }

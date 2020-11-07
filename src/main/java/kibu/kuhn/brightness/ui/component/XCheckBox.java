@@ -4,6 +4,7 @@ import static java.awt.Color.LIGHT_GRAY;
 
 import java.awt.Graphics;
 
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 
@@ -14,8 +15,17 @@ public class XCheckBox extends JCheckBox
 
     private static final long serialVersionUID = 1L;
 
-    public XCheckBox(String text) {
-        super(text);
+    public XCheckBox(String name) {
+        super(name);
+        init();
+    }
+
+    public XCheckBox(Action action) {
+        super(action);
+        init();
+    }
+
+    private void init() {
         setBorderPainted(false);
         setBorder(BorderFactory.createLineBorder(LIGHT_GRAY, 1));
         setSelectedIcon(Icons.getIcon("checkbox_selected18"));

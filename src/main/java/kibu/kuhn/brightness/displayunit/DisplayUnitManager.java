@@ -1,6 +1,7 @@
 package kibu.kuhn.brightness.displayunit;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -22,8 +24,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
+import kibu.kuhn.brightness.domain.ColorTemp;
 import kibu.kuhn.brightness.domain.DisplayUnit;
 import kibu.kuhn.brightness.event.BrightnessEvent;
+import kibu.kuhn.brightness.event.ColorTempEvent;
 import kibu.kuhn.brightness.event.IEventbus;
 
 class DisplayUnitManager implements IDisplayUnitManager
@@ -37,9 +41,12 @@ class DisplayUnitManager implements IDisplayUnitManager
 
     private static DisplayUnitManager manager = new DisplayUnitManager();
 
-    private Map<String, BrightnessTimer> timers = new HashMap<>();
+    private Map<String, DisplayUnitTimer> timers = new HashMap<>();
 
     private List<String> unitNames;
+
+    private ActionListener brightnessTimerEventConsumer = this::handleBrightnessTimerEvent;
+    private ActionListener colorTempTimerEventConsumer = this::handleColorTempTimerEvent;
 
     private DisplayUnitManager() {
         init();
@@ -50,9 +57,21 @@ class DisplayUnitManager implements IDisplayUnitManager
     }
 
     @Subscribe
+    void colorTempChanged(ColorTempEvent e) {
+        var colorTemp = e.getDelegate();
+        var timer = getTimer(null, colorTempTimerEventConsumer);
+        if (timer.isRunning()) {
+            LOGGER.debug("unit={}", "null");
+            return;
+        }
+        timer.restartWith(colorTemp);
+
+    }
+
+    @Subscribe
     void brightnessChanged(BrightnessEvent e) {
         var unit = e.getDelegate();
-        var timer = getTimer(unit.getName());
+        var timer = getTimer(unit.getName(), brightnessTimerEventConsumer);
         if (timer.isRunning()) {
             LOGGER.debug("unit={}", unit);
             return;
@@ -60,12 +79,13 @@ class DisplayUnitManager implements IDisplayUnitManager
         timer.restartWith(unit.getValue());
     }
 
-    private BrightnessTimer getTimer(String unitName) {
+    private DisplayUnitTimer getTimer(String unitName, ActionListener consumer) {
         var timer = timers.get(unitName);
         if (timer == null) {
-            timer = new BrightnessTimer(TIMER_DELAY_MILLIS, this::handleTimerEvent, unitName);
+            timer = new DisplayUnitTimer(TIMER_DELAY_MILLIS, unitName);
             timers.put(unitName, timer);
         }
+        timer.setActionConsumer(consumer);
         return timer;
     }
 
@@ -86,8 +106,8 @@ class DisplayUnitManager implements IDisplayUnitManager
 
     private List<String> queryUnitNames() {
         try {
-            List<String> commands = Arrays.asList("xrandr");
-            List<String> lines = startProcess(commands);
+            var commands = Arrays.asList("xrandr");
+            var lines = startProcess(commands);
             // @formatter:off
 			return lines.stream()
 					    .filter(line -> line.contains("connected") && !line.contains("disconnected"))
@@ -101,9 +121,9 @@ class DisplayUnitManager implements IDisplayUnitManager
 
     private List<String> startProcess(List<String> commands)
             throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        ProcessBuilder builder = new ProcessBuilder(commands);
-        Process process = builder.start();
-        List<String> lines = new ArrayList<>();
+        var builder = new ProcessBuilder(commands);
+        var process = builder.start();
+        var lines = new ArrayList<String>();
         handleStream(process.getInputStream(), lines::add);
         handleStream(process.getErrorStream(), LOGGER::error);
         process.onExit().get(PROCESS_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -111,9 +131,9 @@ class DisplayUnitManager implements IDisplayUnitManager
     }
 
     private void handleStream(InputStream in, Consumer<String> c) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+        var reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
         while (true) {
-            String line = reader.readLine();
+            var line = reader.readLine();
             if (line == null) {
                 break;
             }
@@ -122,34 +142,57 @@ class DisplayUnitManager implements IDisplayUnitManager
         }
     }
 
-    private void handleTimerEvent(ActionEvent e) {
-        BrightnessTimer timer = (BrightnessTimer) e.getSource();
+    private void handleBrightnessTimerEvent(ActionEvent e) {
+        DisplayUnitTimer timer = (DisplayUnitTimer) e.getSource();
         LOGGER.debug("Unit={}, value={}", timer.getUnitName(), timer.getValue());
-        float value = (timer.getValue()) / 100f;
+        float value = ((Integer) timer.getValue()) / 100f;
         if (timer.getUnitName() == null) {
-            processAllUnits(value);
+            processAllUnits(unitName -> processUnit(() -> getBrightnessCommandString(value, unitName)));
         } else {
-            processUnit(value, timer.getUnitName());
+            processUnit(() -> getBrightnessCommandString(value, timer.getUnitName()));
         }
     }
 
-    private void processAllUnits(float value) {
-        unitNames.parallelStream().forEach(name -> processUnit(value, name));
+    private List<String> getBrightnessCommandString(float value, String unitName) {
+        return Arrays.asList("xrandr", "--output", unitName, "--brightness", Float.toString(value));
     }
 
-    void processUnit(float value, String unitName) {
-        List<String> commands = Arrays.asList("xrandr", "--output", unitName, "--brightness", Float.toString(value));
-        processBrightness(commands);
+    private void processAllUnits(Consumer<String> unitConsumer) {
+        unitNames.parallelStream().forEach(unitConsumer);
     }
 
-    private void processBrightness(List<String> commands) {
+    void processUnit(Supplier<List<String>> commandSupplier) {
         try {
-            List<String> lines = startProcess(commands);
+            var lines = startProcess(commandSupplier.get());
             lines.forEach(LOGGER::info);
         } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
             throw new IllegalStateException(e);
         }
+    }
 
+    private void handleColorTempTimerEvent(ActionEvent event) {
+        var timer = (DisplayUnitTimer) event.getSource();
+        LOGGER.debug("Unit={}, value={}", timer.getUnitName(), timer.getValue());
+        var colorTemp = (ColorTemp) timer.getValue();
+
+        if (timer.getUnitName() == null) {
+            processAllUnits(unitName -> processUnit(() -> getColorTempCommandString(colorTemp, unitName)));
+        } else {
+            processUnit(() -> getColorTempCommandString(colorTemp, timer.getUnitName()));
+        }
+    }
+
+    private List<String> getColorTempCommandString(ColorTemp colorTemp, String unitName) {
+        //@formatter:off
+        return Arrays.asList("xrandr",
+                             "--output", unitName,
+                             "--gamma", new StringBuilder().append(colorTemp.getRed() / 255f)
+                                                           .append(':')
+                                                           .append(colorTemp.getGreen() / 255f)
+                                                           .append(':')
+                                                           .append(colorTemp.getBlue() / 255f)
+                                                           .toString());
+        //@formatter:on
     }
 
 }

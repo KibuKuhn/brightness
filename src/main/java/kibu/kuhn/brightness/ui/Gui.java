@@ -26,9 +26,9 @@ class Gui implements IGui
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Gui.class);
 
-    private static final IGui GUI = new Gui();
+    private static final Gui GUI = new Gui();
 
-    static IGui get() {
+    static Gui get() {
         return GUI;
     }
 
@@ -39,7 +39,6 @@ class Gui implements IGui
         initI18n();
     }
 
-    @Override
     public String getI18n(String key) {
         return bundle.getString(key);
     }

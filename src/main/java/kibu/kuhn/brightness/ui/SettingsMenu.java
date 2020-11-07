@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 import javax.swing.AbstractAction;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -43,13 +42,14 @@ import kibu.kuhn.brightness.event.AllUnitsEvent;
 import kibu.kuhn.brightness.event.HelpEvent;
 import kibu.kuhn.brightness.event.IEventbus;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
+import kibu.kuhn.brightness.ui.component.OpenCloseCheckBox;
 import kibu.kuhn.brightness.ui.component.XButton;
 import kibu.kuhn.brightness.ui.component.XCheckBox;
 
 public class SettingsMenu
 {
 
-    private static final int HEIGHT = 300;
+    private static final int HEIGHT = 400;
     private static final int WIDTH = 400;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SettingsMenu.class);
@@ -60,6 +60,7 @@ public class SettingsMenu
     private JLabel infoLabel;
     private LocaleAction messageAction;
     private Consumer<? super ComponentEvent> windowCloseAction;
+    private ColorTempPane colorTempPane;
 
     SettingsMenu() {
         init();
@@ -84,7 +85,7 @@ public class SettingsMenu
     }
 
     private void init() {
-        dialog = new JDialog(null, IGui.get().getI18n("settingsmenu.title"), APPLICATION_MODAL);
+        dialog = new JDialog(null, IGui.getI18n("settingsmenu.title"), APPLICATION_MODAL);
 
         dialog.addWindowListener(new WindowAdapter() {
             @Override
@@ -105,7 +106,7 @@ public class SettingsMenu
         constraints.gridheight = 1;
         constraints.fill = NONE;
         constraints.anchor = WEST;
-        pane.add(new JLabel(IGui.get().getI18n("settingsmenu.laf")), constraints);
+        pane.add(new JLabel(IGui.getI18n("settingsmenu.laf")), constraints);
 
         constraints.insets.right = 2;
         constraints.anchor = EAST;
@@ -130,7 +131,7 @@ public class SettingsMenu
         constraints.gridwidth = 1;
         constraints.weightx = 0;
         constraints.fill = NONE;
-        pane.add(new JLabel(IGui.get().getI18n("settingsmenu.locale")), constraints);
+        pane.add(new JLabel(IGui.getI18n("settingsmenu.locale")), constraints);
 
         constraints.insets.right = 2;
         constraints.anchor = EAST;
@@ -157,7 +158,7 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        JCheckBox darkMode = new XCheckBox(IGui.get().getI18n("settingsmenu.darkmode"));
+        var darkMode = new XCheckBox(IGui.getI18n("settingsmenu.darkmode"));
         darkMode.setSelected(IPreferencesService.get().isDarkMode());
         darkMode.addActionListener(new DarkModeAction());
         pane.add(darkMode, constraints);
@@ -172,7 +173,7 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        JCheckBox adjustLocation = new XCheckBox(IGui.get().getI18n("settingsmenu.adjust.mainmenu.location"));
+        var adjustLocation = new XCheckBox(IGui.getI18n("settingsmenu.adjust.mainmenu.location"));
         adjustLocation.setSelected(IPreferencesService.get().isMainMenuLocationUpdatEnabled());
         adjustLocation.addActionListener(new AdjustLocationAction());
         pane.add(adjustLocation, constraints);
@@ -187,10 +188,20 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        JCheckBox allUnits = new XCheckBox(IGui.get().getI18n("settingsmenu.allunits"));
+        var allUnits = new XCheckBox(IGui.getI18n("settingsmenu.allunits"));
         allUnits.setSelected(IPreferencesService.get().isAllUnits());
         allUnits.addActionListener(new AllUnitsAction());
         pane.add(allUnits, constraints);
+
+        // color temp
+        var colorTemp = new OpenCloseCheckBox("Farbtemperatur");
+        colorTemp.addActionListener(new ColorTempAction());
+        pane.add(colorTemp, constraints);
+        colorTempPane = new ColorTempPane();
+        colorTempPane.setVisible(false);
+        constraints.weighty = 1;
+        constraints.fill = BOTH;
+        pane.add(colorTempPane, constraints);
 
         // help
         constraints.insets.top = 2;
@@ -202,7 +213,7 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        JButton help = new XButton(new HelpAction(event -> IEventbus.get().post(new HelpEvent())));
+        var help = new XButton(new HelpAction(event -> IEventbus.get().post(new HelpEvent())));
         pane.add(help, constraints);
 
         // Glue
@@ -227,7 +238,7 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        JButton exit = new XButton(new ExitAction(event -> System.exit(0)));
+        var exit = new XButton(new ExitAction(event -> System.exit(0)));
 
         pane.add(exit, constraints);
 
@@ -250,7 +261,7 @@ public class SettingsMenu
     }
 
     private void saveSettings() {
-
+        colorTempPane.save();
     }
 
     private ComboBoxModel<Locale> createLocalesModel() {
@@ -296,7 +307,7 @@ public class SettingsMenu
             }
 
             IPreferencesService.get().saveLocale((Locale) locales.getSelectedItem());
-            showMessage(IGui.get().getI18n("settingsmenu.message"));
+            showMessage(IGui.getI18n("settingsmenu.message"));
         }
     }
 
@@ -352,6 +363,17 @@ public class SettingsMenu
             IPreferencesService.get().setAllUnits(selected);
             IEventbus.get().post(new AllUnitsEvent(selected));
         }
+    }
+
+    private class ColorTempAction implements ActionListener
+    {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            var checkBox = (JCheckBox) e.getSource();
+            colorTempPane.setVisible(checkBox.isSelected());
+        }
+
     }
 
     JDialog getDialog() {
