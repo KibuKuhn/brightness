@@ -12,6 +12,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 
+import javax.inject.Inject;
 import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -23,14 +24,15 @@ import javax.swing.JSpinner;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import kibu.kuhn.brightness.displayunit.IDisplayUnitManager;
 import kibu.kuhn.brightness.domain.ColorTemp;
-import kibu.kuhn.brightness.event.ColorTempEvent;
-import kibu.kuhn.brightness.event.IEventbus;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
 import kibu.kuhn.brightness.ui.component.XCheckBox;
 import kibu.kuhn.brightness.ui.component.XRadioButton;
+import kibu.kuhn.brightness.utils.Injection;
 
-class ColorTempPane extends JPanel
+@Injection
+public class ColorTempPane extends JPanel
 {
 
     private static final long serialVersionUID = 1L;
@@ -44,32 +46,40 @@ class ColorTempPane extends JPanel
 
     private XRadioButton autoMode;
 
-    private XCheckBox nightModeCheckbox;
+    private XCheckBox nightShiftCheckbox;
 
-    ColorTempPane() {
+    @Inject
+    private IPreferencesService preferences;
+    @Inject
+    private I18n i18n;
+    @Inject
+    private IDisplayUnitManager displayUnitManager;
+
+    public ColorTempPane() {
         initUI();
         init();
 
     }
 
     private void init() {
-        boolean mode = IPreferencesService.get().isColorTemp();
-        boolean currentMode = nightModeCheckbox.isSelected();
+        boolean mode = preferences.isColorTemp();
+        boolean currentMode = nightShiftCheckbox.isSelected();
         if (mode == currentMode) {
-            nightModeCheckbox.getAction().actionPerformed(new ActionEvent(nightModeCheckbox, ACTION_PERFORMED, ""));
+            nightShiftCheckbox.getAction().actionPerformed(new ActionEvent(nightShiftCheckbox, ACTION_PERFORMED, ""));
         } else {
-            nightModeCheckbox.setSelected(mode);
+            nightShiftCheckbox.setSelected(mode);
         }
-        int kelvin = IPreferencesService.get().getColorTempKelvin();
+        int kelvin = preferences.getColorTempKelvin();
         colorTempSteps.getModel().setValue(kelvin);
 
-        boolean autoMode = IPreferencesService.get().isColorTempAutoMode();
+        boolean autoMode = preferences.isColorTempAutoMode();
         if (autoMode) {
             this.autoMode.setSelected(true);
         } else {
             manualMode.setSelected(true);
         }
-
+        ((SpinnerHourModel) fromTime.getModel()).setValue(preferences.getColorTempFromTime());
+        ((SpinnerHourModel) toTime.getModel()).setValue(preferences.getColorTempToTime());
     }
 
     private void initUI() {
@@ -83,8 +93,8 @@ class ColorTempPane extends JPanel
         constraints.weighty = 0;
         constraints.fill = NONE;
         constraints.gridwidth = REMAINDER;
-        nightModeCheckbox = new XCheckBox(new NightModeAction());
-        add(nightModeCheckbox, constraints);
+        nightShiftCheckbox = new XCheckBox(new NightShiftAction());
+        add(nightShiftCheckbox, constraints);
 
         constraints.weightx = 0;
         constraints.gridwidth = 1;
@@ -117,13 +127,13 @@ class ColorTempPane extends JPanel
         // time settings
         constraints.weightx = 0;
         constraints.gridwidth = 1;
-        add(new JLabel("Von"), constraints);
+        add(new JLabel(i18n.get("colorTempPane.from")), constraints);
         constraints.insets.left = 10;
         fromTime = new JSpinner(new SpinnerHourModel());
         fromTime.setPreferredSize(dim);
         add(fromTime, constraints);
         constraints.insets.left = 20;
-        add(new JLabel("Bis"), constraints);
+        add(new JLabel(i18n.get("colorTempPane.to")), constraints);
         toTime = new JSpinner(new SpinnerHourModel());
         toTime.setPreferredSize(dim);
         constraints.insets.left = 10;
@@ -168,7 +178,11 @@ class ColorTempPane extends JPanel
     }
 
     void save() {
-        // TODO
+        preferences.setColorTemp(nightShiftCheckbox.isSelected());
+        preferences.setColorTempAutoMode(autoMode.isSelected());
+        preferences.setColorTempKelvin(getColorTemp(colorTempSteps).getKelvin());
+        preferences.setColorTempFromTime(((SpinnerHourModel) fromTime.getModel()).getValue().getTime());
+        preferences.setColorTempToTime(((SpinnerHourModel) toTime.getModel()).getValue().getTime());
     }
 
     private class ColorTempAdapter implements ChangeListener
@@ -179,7 +193,7 @@ class ColorTempPane extends JPanel
             var spinner = (JSpinner) e.getSource();
             var colorTemp = getColorTemp(spinner);
             displayColorTemp(colorTemp);
-            IEventbus.get().post(new ColorTempEvent(colorTemp));
+            displayUnitManager.updateColorTemp(colorTemp);
         }
     }
 
@@ -189,7 +203,7 @@ class ColorTempPane extends JPanel
         private static final long serialVersionUID = 1L;
 
         private ManualModeAction() {
-            putValue(NAME, "Manuell");
+            putValue(NAME, i18n.get("colorTempPane.mode.manual"));
         }
 
         @Override
@@ -205,7 +219,7 @@ class ColorTempPane extends JPanel
         private static final long serialVersionUID = 1L;
 
         private AutoModeAction() {
-            putValue(NAME, "Automatisch");
+            putValue(NAME, i18n.get("colorTempPane.mode.auto"));
         }
 
         @Override
@@ -216,12 +230,12 @@ class ColorTempPane extends JPanel
 
     }
 
-    private class NightModeAction extends AbstractAction
+    private class NightShiftAction extends AbstractAction
     {
         private static final long serialVersionUID = 1L;
 
-        private NightModeAction() {
-            putValue(NAME, "Nachtmodus");
+        private NightShiftAction() {
+            putValue(NAME, i18n.get("colorTempPane.nightshift"));
         }
 
         @Override
@@ -235,24 +249,24 @@ class ColorTempPane extends JPanel
     private String getColorTempTooltip(ColorTemp ct) {
         int kelvin = ct.getKelvin();
         if (kelvin <= 1800) {
-            return IGui.getI18n("colorTempPane.candle");
+            return i18n.get("colorTempPane.candle");
         }
         if (kelvin <= 2800) {
-            return IGui.getI18n("colorTempPane.extraWarmWhite");
+            return i18n.get("colorTempPane.extraWarmWhite");
         }
         if (kelvin <= 3000) {
-            return IGui.getI18n("colorTempPane.warmWhite");
+            return i18n.get("colorTempPane.warmWhite");
         }
         if (kelvin <= 4000) {
-            return IGui.getI18n("colorTempPane.coolWhite");
+            return i18n.get("colorTempPane.coolWhite");
         }
         if (kelvin <= 5000) {
-            return IGui.getI18n("colorTempPane.saylight");
+            return i18n.get("colorTempPane.saylight");
         }
         if (kelvin <= 7000) {
-            return IGui.getI18n("colorTempPane.overcastSky");
+            return i18n.get("colorTempPane.overcastSky");
         }
-        return IGui.getI18n("colorTempPane.blueSky");
+        return i18n.get("colorTempPane.blueSky");
     };
 
 }

@@ -40,8 +40,8 @@ public class XEventQueue extends EventQueue
             return;
         }
 
-        JDialog dialog = (JDialog) event.getSource();
-        WindowEvent windowEvent = new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING);
+        var dialog = (JDialog) event.getSource();
+        var windowEvent = new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING);
         dialog.dispatchEvent(windowEvent);
 
     }
@@ -51,7 +51,7 @@ public class XEventQueue extends EventQueue
             return false;
         }
 
-        KeyEvent ke = (KeyEvent) event;
+        var ke = (KeyEvent) event;
         if (ke.getKeyCode() != KeyEvent.VK_ESCAPE) {
             return false;
         }

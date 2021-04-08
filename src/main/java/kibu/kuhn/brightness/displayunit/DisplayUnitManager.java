@@ -22,15 +22,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-
 import kibu.kuhn.brightness.domain.ColorTemp;
 import kibu.kuhn.brightness.domain.DisplayUnit;
-import kibu.kuhn.brightness.event.BrightnessEvent;
-import kibu.kuhn.brightness.event.ColorTempEvent;
-import kibu.kuhn.brightness.event.IEventbus;
 
-class DisplayUnitManager implements IDisplayUnitManager
+public class DisplayUnitManager implements IDisplayUnitManager
 {
 
     private static final int PROCESS_TIMEOUT = 100;
@@ -39,8 +34,6 @@ class DisplayUnitManager implements IDisplayUnitManager
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DisplayUnitManager.class);
 
-    private static DisplayUnitManager manager = new DisplayUnitManager();
-
     private Map<String, DisplayUnitTimer> timers = new HashMap<>();
 
     private List<String> unitNames;
@@ -48,38 +41,22 @@ class DisplayUnitManager implements IDisplayUnitManager
     private ActionListener brightnessTimerEventConsumer = this::handleBrightnessTimerEvent;
     private ActionListener colorTempTimerEventConsumer = this::handleColorTempTimerEvent;
 
-    private DisplayUnitManager() {
-        init();
+    public DisplayUnitManager() {
+        unitNames = queryUnitNames();
     }
 
-    private void init() {
-        IEventbus.get().register(this);
-    }
-
-    @Subscribe
-    void colorTempChanged(ColorTempEvent e) {
-        var colorTemp = e.getDelegate();
+    @Override
+    public void updateColorTemp(ColorTemp colorTemp) {
         var timer = getTimer(null, colorTempTimerEventConsumer);
         if (timer.isRunning()) {
             LOGGER.debug("unit={}", "null");
             return;
         }
         timer.restartWith(colorTemp);
-
-    }
-
-    @Subscribe
-    void brightnessChanged(BrightnessEvent e) {
-        var unit = e.getDelegate();
-        var timer = getTimer(unit.getName(), brightnessTimerEventConsumer);
-        if (timer.isRunning()) {
-            LOGGER.debug("unit={}", unit);
-            return;
-        }
-        timer.restartWith(unit.getValue());
     }
 
     private DisplayUnitTimer getTimer(String unitName, ActionListener consumer) {
+        LOGGER.debug("unitName: {}, consumer: {}", unitName, consumer);
         var timer = timers.get(unitName);
         if (timer == null) {
             timer = new DisplayUnitTimer(TIMER_DELAY_MILLIS, unitName);
@@ -98,10 +75,6 @@ class DisplayUnitManager implements IDisplayUnitManager
 		                .map(DisplayUnit::new)
 		                .collect(Collectors.toList());
 		// @formatter:on
-    }
-
-    static IDisplayUnitManager get() {
-        return manager;
     }
 
     private List<String> queryUnitNames() {
@@ -143,7 +116,7 @@ class DisplayUnitManager implements IDisplayUnitManager
     }
 
     private void handleBrightnessTimerEvent(ActionEvent e) {
-        DisplayUnitTimer timer = (DisplayUnitTimer) e.getSource();
+        var timer = (DisplayUnitTimer) e.getSource();
         LOGGER.debug("Unit={}, value={}", timer.getUnitName(), timer.getValue());
         float value = ((Integer) timer.getValue()) / 100f;
         if (timer.getUnitName() == null) {
@@ -193,6 +166,16 @@ class DisplayUnitManager implements IDisplayUnitManager
                                                            .append(colorTemp.getBlue() / 255f)
                                                            .toString());
         //@formatter:on
+    }
+
+    @Override
+    public void updateBrightness(DisplayUnit unit) {
+        var timer = getTimer(unit.getName(), brightnessTimerEventConsumer);
+        if (timer.isRunning()) {
+            LOGGER.debug("unit={}", unit);
+            return;
+        }
+        timer.restartWith(unit.getValue());
     }
 
 }

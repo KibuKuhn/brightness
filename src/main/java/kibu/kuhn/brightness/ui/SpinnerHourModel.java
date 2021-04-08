@@ -3,39 +3,48 @@ package kibu.kuhn.brightness.ui;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+import javax.inject.Inject;
 import javax.swing.AbstractSpinnerModel;
 
-public class SpinnerHourModel extends AbstractSpinnerModel
+import kibu.kuhn.brightness.utils.Injection;
+
+@Injection
+public class SpinnerHourModel extends AbstractSpinnerModel implements ISpinnerHourModel
 {
 
     private static final long serialVersionUID = 1L;
 
-    private static DateTimeFormatter pattern_AM_PM = DateTimeFormatter.ofPattern("hh:mm a");
-    private static DateTimeFormatter pattern_24H = DateTimeFormatter.ofPattern("HH:mm");
+    private DateTimeFormatter timeFormatter;
 
     private LocalTime value;
 
+    @Inject
+    private I18n i18n;
+
     public SpinnerHourModel() {
         value = LocalTime.now();
+        timeFormatter = DateTimeFormatter.ofPattern(i18n.get("spinnerHourModel.pattern"));
     }
 
     @Override
-    public Object getValue() {
-        return TimeWrapper.of(value);
+    public TimeWrapper getValue() {
+        return TimeWrapper.of(value, timeFormatter);
     }
 
     @Override
     public void setValue(Object value) {
         LocalTime lt = null;
         if (value instanceof String) {
-            lt = LocalTime.parse((String) value, pattern_24H);
+            lt = LocalTime.parse((String) value, timeFormatter);
         } else if (value instanceof TimeWrapper) {
             lt = ((TimeWrapper) value).time;
+        } else if (value instanceof LocalTime) {
+            lt = (LocalTime) value;
         } else {
             throw new IllegalArgumentException("Not supported value type: " + value.getClass());
         }
 
-        LocalTime time = this.value;
+        var time = this.value;
         this.value = lt;
 
         if (!time.equals(lt)) {
@@ -44,34 +53,39 @@ public class SpinnerHourModel extends AbstractSpinnerModel
     }
 
     @Override
-    public Object getNextValue() {
-        return TimeWrapper.of(value.plusMinutes(1));
+    public TimeWrapper getNextValue() {
+        return TimeWrapper.of(value.plusMinutes(1), timeFormatter);
     }
 
     @Override
-    public Object getPreviousValue() {
-        return TimeWrapper.of(value.minusMinutes(1));
+    public TimeWrapper getPreviousValue() {
+        return TimeWrapper.of(value.minusMinutes(1), timeFormatter);
     }
 
     public static class TimeWrapper implements Comparable<TimeWrapper>
     {
         private LocalTime time;
+        private DateTimeFormatter formatter;
 
         @Override
         public String toString() {
-
-            return time.format(pattern_24H);
+            return time.format(formatter);
         }
 
-        public static TimeWrapper of(LocalTime value) {
-            TimeWrapper wrapper = new TimeWrapper();
+        static TimeWrapper of(LocalTime value, DateTimeFormatter formatter) {
+            var wrapper = new TimeWrapper();
             wrapper.time = value;
+            wrapper.formatter = formatter;
             return wrapper;
         }
 
         @Override
         public int compareTo(TimeWrapper o) {
             return this.time.compareTo(o.time);
+        }
+
+        public LocalTime getTime() {
+            return time;
         }
     }
 

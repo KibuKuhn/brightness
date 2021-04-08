@@ -47,11 +47,11 @@ class DisplayUnitTimer extends Timer
             return;
         }
         if (listener != null) {
-            this.removeActionListener(dummyListener);
-            this.removeActionListener(listener);
+            removeActionListener(dummyListener);
+            removeActionListener(listener);
         }
         listener = c;
-        this.addActionListener(listener);
+        addActionListener(listener);
     }
 
 }

@@ -1,6 +1,7 @@
 package kibu.kuhn.brightness.prefs;
 
 import java.awt.Point;
+import java.time.LocalTime;
 import java.util.Locale;
 
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -17,10 +18,6 @@ public interface IPreferencesService
     LookAndFeelInfo getLaf();
 
     Locale getLocale();
-
-    static IPreferencesService get() {
-        return PreferencesService.get();
-    }
 
     boolean isMainMenuLocationUpdatEnabled();
 
@@ -53,5 +50,13 @@ public interface IPreferencesService
     boolean isColorTempAutoMode();
 
     void setColorTempAutoMode(boolean autoMode);
+
+    void setColorTempFromTime(LocalTime time);
+
+    void setColorTempToTime(LocalTime time);
+
+    LocalTime getColorTempFromTime();
+
+    LocalTime getColorTempToTime();
 
 }

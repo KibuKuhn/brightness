@@ -6,12 +6,4 @@ public interface IGui
 
     boolean checkSupport();
 
-    static IGui get() {
-        return Gui.get();
-    }
-
-    static String getI18n(String key) {
-        return Gui.get().getI18n(key);
-    }
-
 }

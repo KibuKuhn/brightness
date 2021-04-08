@@ -11,6 +11,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.inject.Inject;
 import javax.swing.JDialog;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -20,8 +21,10 @@ import com.google.common.eventbus.Subscribe;
 import kibu.kuhn.brightness.event.HelpEvent;
 import kibu.kuhn.brightness.event.IEventbus;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
+import kibu.kuhn.brightness.utils.Injection;
 
-class MainMenu extends MouseAdapter
+@Injection
+public class MainMenu extends MouseAdapter
 {
 
     private JDialog dialog;
@@ -30,17 +33,21 @@ class MainMenu extends MouseAdapter
     private JTextArea errorPane;
     private MainMenuLocationHandler mainMenuLocationHandler;
     private SliderPane sliderPane;
+    @Inject
+    private IPreferencesService preferences;
+    @Inject
+    private IEventbus eventbus;
 
-    MainMenu() {
+    public MainMenu() {
         init();
     }
 
     private void init() {
-        IEventbus.get().register(this);
+        eventbus.register(this);
     }
 
     private HelpMenu createHelpMenu() {
-        JDialog parent = settingsMenu == null ? null : settingsMenu.getDialog();
+        var parent = settingsMenu == null ? null : settingsMenu.getDialog();
         var menu = new HelpMenu(parent);
         menu.setWindowCloseAction(e -> helpMenu = null);
         return menu;
@@ -120,7 +127,7 @@ class MainMenu extends MouseAdapter
         }
 
         private void closeDialog() {
-            if (IPreferencesService.get().isMainMenuLocationUpdatEnabled()) {
+            if (preferences.isMainMenuLocationUpdatEnabled()) {
                 mainMenuLocationHandler.saveLocation();
             }
             if (dialog == null) {

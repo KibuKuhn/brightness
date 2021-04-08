@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JPanel;
@@ -31,8 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import kibu.kuhn.brightness.ui.component.XHTMLEditorKit;
+import kibu.kuhn.brightness.utils.Injection;
 
-class HelpMenu
+@Injection
+public class HelpMenu
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HelpMenu.class);
@@ -42,7 +45,12 @@ class HelpMenu
 
     private Consumer<? super ComponentEvent> windowCloseAction;
 
-    HelpMenu(JDialog parent) {
+    @Inject
+    private Icons icons;
+    @Inject
+    private I18n i18n;
+
+    public HelpMenu(JDialog parent) {
         try {
             init(parent);
         } catch (IOException ex) {
@@ -65,7 +73,7 @@ class HelpMenu
     }
 
     private void init(JDialog parent) throws IOException {
-        dialog = new JDialog(parent, IGui.getI18n("helpmenu.title"), APPLICATION_MODAL);
+        dialog = new JDialog(parent, i18n.get("helpmenu.title"), APPLICATION_MODAL);
         dialog.setModal(parent != null);
         dialog.addWindowListener(new WindowAdapter() {
             @Override
@@ -74,7 +82,7 @@ class HelpMenu
             };
         });
 
-        dialog.setIconImage(Icons.getImage("list36_filled"));
+        dialog.setIconImage(icons.getImage("list36_filled"));
         var pane = (JPanel) dialog.getContentPane();
         pane.setLayout(new BorderLayout());
         htmlPane = new JEditorPane();
@@ -126,7 +134,7 @@ class HelpMenu
     }
 
     private InputStream getStream() {
-        return getClass().getResourceAsStream("/" + IGui.getI18n("help.html"));
+        return getClass().getResourceAsStream("/" + i18n.get("help.html"));
     }
 
     private void openLink(URL url) {
@@ -135,10 +143,10 @@ class HelpMenu
                 Desktop.getDesktop().browse(url.toURI());
             } catch (Exception e) {
                 LOGGER.error(e.getMessage(), e);
-                htmlPane.setText(String.format(IGui.getI18n("HelpPane.error"), e.getLocalizedMessage()));
+                htmlPane.setText(String.format(i18n.get("HelpPane.error"), e.getLocalizedMessage()));
             }
         } else {
-            htmlPane.setText(IGui.getI18n("HelpPane.System.Web.Browser.not.supported"));
+            htmlPane.setText(i18n.get("HelpPane.System.Web.Browser.not.supported"));
         }
 
     }

@@ -4,12 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import kibu.kuhn.brightness.ui.IGui;
+import kibu.kuhn.brightness.utils.InjectorSupport;
 
 public class Brightness
 {
@@ -45,12 +47,16 @@ public class Brightness
         SwingUtilities.invokeLater(Brightness::new);
     }
 
+    @Inject
+    private IGui gui;
+
     Brightness() {
-        if (!IGui.get().checkSupport()) {
+        InjectorSupport.get().injectMembers(this);
+        if (!gui.checkSupport()) {
             System.exit(0);
         }
 
-        IGui.get().init();
+        gui.init();
     }
 
     private static void initLogging() {
@@ -60,7 +66,7 @@ public class Brightness
             System.setProperty(LOG_DIR, logDir);
         }
         System.setProperty(LOG_FILE, ".brightness.log");
-        String logLevel = System.getProperty("logLevel");
+        var logLevel = System.getProperty("logLevel");
         if (logLevel == null) {
             System.setProperty("logLevel", "INFO");
         }

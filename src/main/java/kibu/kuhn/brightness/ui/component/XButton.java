@@ -30,7 +30,7 @@ public class XButton extends JButton
 
     @Override
     public Dimension getPreferredSize() {
-        Dimension preferredSize = super.getPreferredSize();
+        var preferredSize = super.getPreferredSize();
         preferredSize.height = 32;
         if (preferredSize.width < 32) {
             preferredSize.width = 32;

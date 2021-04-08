@@ -1,19 +1,16 @@
 package kibu.kuhn.brightness.ui;
 
 import java.awt.Image;
+
 import javax.swing.Icon;
 
-public interface Icons {
+public interface Icons
+{
 
-  static Image getImage(String iconName) {
-    return IconsFactory.get().getImage(iconName);
-  }
+    Image getImage(String iconName);
 
-  static Icon getIcon(String iconName) {
-    return IconsFactory.get().getIcon(iconName);
-  }
+    Icon getIcon(String iconName);
 
-  static void clearCache() {
-    IconsFactory.get().clearCache();
-  }
+    void clearCache();
+
 }

@@ -4,16 +4,22 @@ import static java.awt.Color.LIGHT_GRAY;
 
 import java.awt.Graphics;
 
+import javax.inject.Inject;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 
 import kibu.kuhn.brightness.ui.Icons;
+import kibu.kuhn.brightness.utils.Injection;
 
+@Injection
 public class XCheckBox extends JCheckBox
 {
 
     private static final long serialVersionUID = 1L;
+
+    @Inject
+    private Icons icons;
 
     public XCheckBox(String name) {
         super(name);
@@ -28,8 +34,8 @@ public class XCheckBox extends JCheckBox
     private void init() {
         setBorderPainted(false);
         setBorder(BorderFactory.createLineBorder(LIGHT_GRAY, 1));
-        setSelectedIcon(Icons.getIcon("checkbox_selected18"));
-        setIcon(Icons.getIcon("checkbox_unselected18"));
+        setSelectedIcon(icons.getIcon("checkbox_selected18"));
+        setIcon(icons.getIcon("checkbox_unselected18"));
         setRolloverEnabled(false);
     }
 

@@ -12,6 +12,7 @@ import java.awt.image.ImageObserver;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Dictionary;
+
 import javax.swing.GrayFilter;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -23,7 +24,6 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
-import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.LayeredHighlighter;
 import javax.swing.text.Position;
@@ -37,7 +37,8 @@ import javax.swing.text.html.InlineView;
 import javax.swing.text.html.StyleSheet;
 
 //Patched code from ImageView
-public class XImageView extends View {
+public class XImageView extends View
+{
 
     private static boolean sIsInc = false;
     /**
@@ -62,7 +63,7 @@ public class XImageView extends View {
     // the size of <code>sMissingImageIcon</code> and
     // <code>sPendingImageIcon</code>
     private static final int DEFAULT_WIDTH = 38;
-    private static final int DEFAULT_HEIGHT= 38;
+    private static final int DEFAULT_HEIGHT = 38;
 
     /**
      * Default border to use if one is not specified.
@@ -83,9 +84,11 @@ public class XImageView extends View {
     private Image disabledImage;
     private int width;
     private int height;
-    /** Bitmask containing some of the above bitmask values. Because the
-     * image loading notification can happen on another thread access to
-     * this is synchronized (at least for modifying it). */
+    /**
+     * Bitmask containing some of the above bitmask values. Because the image
+     * loading notification can happen on another thread access to this is
+     * synchronized (at least for modifying it).
+     */
     private int state;
     private Container container;
     private Rectangle fBounds;
@@ -99,19 +102,17 @@ public class XImageView extends View {
     private short topInset;
     private short bottomInset;
     /**
-     * We don't directly implement ImageObserver, instead we use an instance
-     * that calls back to us.
+     * We don't directly implement ImageObserver, instead we use an instance that
+     * calls back to us.
      */
     private ImageObserver imageObserver;
     /**
-     * Used for alt text. Will be non-null if the image couldn't be found,
-     * and there is valid alt text.
+     * Used for alt text. Will be non-null if the image couldn't be found, and there
+     * is valid alt text.
      */
     private View altView;
     /** Alignment along the vertical (Y) axis. */
     private float vAlign;
-
-
 
     /**
      * Creates a new view that represents an IMG element.
@@ -126,33 +127,30 @@ public class XImageView extends View {
     }
 
     /**
-     * Returns the text to display if the image cannot be loaded. This is
-     * obtained from the Elements attribute set with the attribute name
+     * Returns the text to display if the image cannot be loaded. This is obtained
+     * from the Elements attribute set with the attribute name
      * <code>HTML.Attribute.ALT</code>.
      *
      * @return the test to display if the image cannot be loaded.
      */
     public String getAltText() {
-        return (String)getElement().getAttributes().getAttribute
-            (HTML.Attribute.ALT);
+        return (String) getElement().getAttributes().getAttribute(HTML.Attribute.ALT);
     }
 
     /**
-     * Return a URL for the image source,
-     * or null if it could not be determined.
+     * Return a URL for the image source, or null if it could not be determined.
      *
      * @return the URL for the image source, or null if it could not be determined.
      */
     public URL getImageURL() {
-        String src = (String)getElement().getAttributes().
-                             getAttribute(HTML.Attribute.SRC);
+        var src = (String) getElement().getAttributes().getAttribute(HTML.Attribute.SRC);
         if (src == null) {
             return null;
         }
 
-        URL reference = ((HTMLDocument)getDocument()).getBase();
+        var reference = ((HTMLDocument) getDocument()).getBase();
         try {
-            URL u = new URL(reference,src);
+            URL u = new URL(reference, src);
             return u;
         } catch (MalformedURLException e) {
             return null;
@@ -188,8 +186,8 @@ public class XImageView extends View {
     }
 
     private Image getImage(boolean enabled) {
-        Image img = getImage();
-        if (! enabled) {
+        var img = getImage();
+        if (!enabled) {
             if (disabledImage == null) {
                 disabledImage = GrayFilter.createDisabledImage(img);
             }
@@ -199,20 +197,19 @@ public class XImageView extends View {
     }
 
     /**
-     * Sets how the image is loaded. If <code>newValue</code> is true,
-     * the image will be loaded when first asked for, otherwise it will
-     * be loaded asynchronously. The default is to not load synchronously,
-     * that is to load the image asynchronously.
+     * Sets how the image is loaded. If <code>newValue</code> is true, the image
+     * will be loaded when first asked for, otherwise it will be loaded
+     * asynchronously. The default is to not load synchronously, that is to load the
+     * image asynchronously.
      *
-     * @param newValue if {@code true} the image will be loaded when first asked for,
-     *                 otherwise it will be asynchronously.
+     * @param newValue if {@code true} the image will be loaded when first asked
+     *                 for, otherwise it will be asynchronously.
      */
     public void setLoadsSynchronously(boolean newValue) {
-        synchronized(this) {
+        synchronized (this) {
             if (newValue) {
                 state |= SYNC_LOAD_FLAG;
-            }
-            else {
+            } else {
                 state = (state | SYNC_LOAD_FLAG) ^ SYNC_LOAD_FLAG;
             }
         }
@@ -233,15 +230,15 @@ public class XImageView extends View {
      * @return the StyleSheet
      */
     protected StyleSheet getStyleSheet() {
-        HTMLDocument doc = (HTMLDocument) getDocument();
+        var doc = (HTMLDocument) getDocument();
         return doc.getStyleSheet();
     }
 
     /**
-     * Fetches the attributes to use when rendering.  This is
-     * implemented to multiplex the attributes specified in the
-     * model with a StyleSheet.
+     * Fetches the attributes to use when rendering. This is implemented to
+     * multiplex the attributes specified in the model with a StyleSheet.
      */
+    @Override
     public AttributeSet getAttributes() {
         sync();
         return attr;
@@ -254,6 +251,7 @@ public class XImageView extends View {
      *
      * @see JTextComponent#getToolTipText
      */
+    @Override
     public String getToolTipText(float x, float y, Shape allocation) {
         return getAltText();
     }
@@ -262,27 +260,23 @@ public class XImageView extends View {
      * Update any cached values that come from attributes.
      */
     protected void setPropertiesFromAttributes() {
-        StyleSheet sheet = getStyleSheet();
+        var sheet = getStyleSheet();
         this.attr = sheet.getViewAttributes(this);
 
         // Gutters
-        borderSize = (short)getIntAttr(HTML.Attribute.BORDER, isLink() ?
-                                       DEFAULT_BORDER : 0);
+        borderSize = (short) getIntAttr(HTML.Attribute.BORDER, isLink() ? DEFAULT_BORDER : 0);
 
-        leftInset = rightInset = (short)(getIntAttr(HTML.Attribute.HSPACE,
-                                                    0) + borderSize);
-        topInset = bottomInset = (short)(getIntAttr(HTML.Attribute.VSPACE,
-                                                    0) + borderSize);
+        leftInset = rightInset = (short) (getIntAttr(HTML.Attribute.HSPACE, 0) + borderSize);
+        topInset = bottomInset = (short) (getIntAttr(HTML.Attribute.VSPACE, 0) + borderSize);
 
-        borderColor = ((StyledDocument)getDocument()).getForeground
-                      (getAttributes());
+        borderColor = ((StyledDocument) getDocument()).getForeground(getAttributes());
 
         AttributeSet attr = getElement().getAttributes();
 
         // Alignment.
         // PENDING: This needs to be changed to support the CSS versions
         // when conversion from ALIGN to VERTICAL_ALIGN is complete.
-        Object alignment = attr.getAttribute(HTML.Attribute.ALIGN);
+        var alignment = attr.getAttribute(HTML.Attribute.ALIGN);
 
         vAlign = 1.0f;
         if (alignment != null) {
@@ -290,43 +284,41 @@ public class XImageView extends View {
             if ("top".equals(alignment)) {
                 vAlign = 0f;
             }
-            //ugly hack for better alignment
+            // ugly hack for better alignment
             else if ("middle".equals(alignment)) {
-              int height = getImage().getHeight(null);
-              if (height < 0) {
-                vAlign = 0.5f;
-              }
-              else {
-                float h = 1f/height;
-                vAlign = .7f + h;
-              }
+                int height = getImage().getHeight(null);
+                if (height < 0) {
+                    vAlign = 0.5f;
+                } else {
+                    float h = 1f / height;
+                    vAlign = .7f + h;
+                }
             }
         }
 
-        AttributeSet anchorAttr = (AttributeSet)attr.getAttribute(HTML.Tag.A);
-        if (anchorAttr != null && anchorAttr.isDefined
-            (HTML.Attribute.HREF)) {
-            synchronized(this) {
+        var anchorAttr = (AttributeSet) attr.getAttribute(HTML.Tag.A);
+        if (anchorAttr != null && anchorAttr.isDefined(HTML.Attribute.HREF)) {
+            synchronized (this) {
                 state |= LINK_FLAG;
             }
-        }
-        else {
-            synchronized(this) {
+        } else {
+            synchronized (this) {
                 state = (state | LINK_FLAG) ^ LINK_FLAG;
             }
         }
     }
 
     /**
-     * Establishes the parent view for this view.
-     * Seize this moment to cache the AWT Container I'm in.
+     * Establishes the parent view for this view. Seize this moment to cache the AWT
+     * Container I'm in.
      */
+    @Override
     public void setParent(View parent) {
-        View oldParent = getParent();
+        var oldParent = getParent();
         super.setParent(parent);
         container = (parent != null) ? getContainer() : null;
         if (oldParent != parent) {
-            synchronized(this) {
+            synchronized (this) {
                 state |= RELOAD_FLAG;
             }
         }
@@ -335,10 +327,11 @@ public class XImageView extends View {
     /**
      * Invoked when the Elements attributes have changed. Recreates the image.
      */
+    @Override
     public void changedUpdate(DocumentEvent e, Shape a, ViewFactory f) {
-        super.changedUpdate(e,a,f);
+        super.changedUpdate(e, a, f);
 
-        synchronized(this) {
+        synchronized (this) {
             state |= RELOAD_FLAG | RELOAD_IMAGE_FLAG;
         }
 
@@ -353,54 +346,45 @@ public class XImageView extends View {
      * @param a the allocated region to render into
      * @see View#paint
      */
+    @Override
     public void paint(Graphics g, Shape a) {
         sync();
 
-        Rectangle rect = (a instanceof Rectangle) ? (Rectangle)a :
-                         a.getBounds();
-        Rectangle clip = g.getClipBounds();
+        var rect = (a instanceof Rectangle) ? (Rectangle) a : a.getBounds();
+        var clip = g.getClipBounds();
 
         fBounds.setBounds(rect);
         paintHighlights(g, a);
         paintBorder(g, rect);
         if (clip != null) {
-            g.clipRect(rect.x + leftInset, rect.y + topInset,
-                       rect.width - leftInset - rightInset,
-                       rect.height - topInset - bottomInset);
+            g.clipRect(rect.x + leftInset, rect.y + topInset, rect.width - leftInset - rightInset,
+                    rect.height - topInset - bottomInset);
         }
 
-        Container host = getContainer();
-        Image img = getImage(host == null || host.isEnabled());
+        var host = getContainer();
+        var img = getImage(host == null || host.isEnabled());
         if (img != null) {
-            if (! hasPixels(img)) {
+            if (!hasPixels(img)) {
                 // No pixels yet, use the default
-                Icon icon = getLoadingImageIcon();
+                var icon = getLoadingImageIcon();
                 if (icon != null) {
-                    icon.paintIcon(host, g,
-                            rect.x + leftInset, rect.y + topInset);
+                    icon.paintIcon(host, g, rect.x + leftInset, rect.y + topInset);
                 }
-            }
-            else {
+            } else {
                 // Draw the image
-                g.drawImage(img, rect.x + leftInset, rect.y + topInset,
-                            width, height, imageObserver);
+                g.drawImage(img, rect.x + leftInset, rect.y + topInset, width, height, imageObserver);
             }
-        }
-        else {
-            Icon icon = getNoImageIcon();
+        } else {
+            var icon = getNoImageIcon();
             if (icon != null) {
-                icon.paintIcon(host, g,
-                        rect.x + leftInset, rect.y + topInset);
+                icon.paintIcon(host, g, rect.x + leftInset, rect.y + topInset);
             }
-            View view = getAltView();
+            var view = getAltView();
             // Paint the view representing the alt text, if its non-null
-            if (view != null && ((state & WIDTH_FLAG) == 0 ||
-                                 width > DEFAULT_WIDTH)) {
+            if (view != null && ((state & WIDTH_FLAG) == 0 || width > DEFAULT_WIDTH)) {
                 // Assume layout along the y direction
-                Rectangle altRect = new Rectangle
-                    (rect.x + leftInset + DEFAULT_WIDTH, rect.y + topInset,
-                     rect.width - leftInset - rightInset - DEFAULT_WIDTH,
-                     rect.height - topInset - bottomInset);
+                var altRect = new Rectangle(rect.x + leftInset + DEFAULT_WIDTH, rect.y + topInset,
+                        rect.width - leftInset - rightInset - DEFAULT_WIDTH, rect.height - topInset - bottomInset);
 
                 view.paint(g, altRect);
             }
@@ -413,17 +397,16 @@ public class XImageView extends View {
 
     private void paintHighlights(Graphics g, Shape shape) {
         if (container instanceof JTextComponent) {
-            JTextComponent tc = (JTextComponent)container;
-            Highlighter h = tc.getHighlighter();
+            var tc = (JTextComponent) container;
+            var h = tc.getHighlighter();
             if (h instanceof LayeredHighlighter) {
-                ((LayeredHighlighter)h).paintLayeredHighlights
-                    (g, getStartOffset(), getEndOffset(), shape, tc, this);
+                ((LayeredHighlighter) h).paintLayeredHighlights(g, getStartOffset(), getEndOffset(), shape, tc, this);
             }
         }
     }
 
     private void paintBorder(Graphics g, Rectangle rect) {
-        Color color = borderColor;
+        var color = borderColor;
 
         if ((borderSize > 0 || image == null) && color != null) {
             int xOffset = leftInset - borderSize;
@@ -431,24 +414,22 @@ public class XImageView extends View {
             g.setColor(color);
             int n = (image == null) ? 1 : borderSize;
             for (int counter = 0; counter < n; counter++) {
-                g.drawRect(rect.x + xOffset + counter,
-                           rect.y + yOffset + counter,
-                           rect.width - counter - counter - xOffset -xOffset-1,
-                           rect.height - counter - counter -yOffset-yOffset-1);
+                g.drawRect(rect.x + xOffset + counter, rect.y + yOffset + counter,
+                        rect.width - counter - counter - xOffset - xOffset - 1,
+                        rect.height - counter - counter - yOffset - yOffset - 1);
             }
         }
     }
 
     /**
-     * Determines the preferred span for this view along an
-     * axis.
+     * Determines the preferred span for this view along an axis.
      *
      * @param axis may be either X_AXIS or Y_AXIS
-     * @return   the span the view would like to be rendered into;
-     *           typically the view is told to render into the span
-     *           that is returned, although there is no guarantee;
-     *           the parent may choose to resize or break the view
+     * @return the span the view would like to be rendered into; typically the view
+     *         is told to render into the span that is returned, although there is
+     *         no guarantee; the parent may choose to resize or break the view
      */
+    @Override
     public float getPreferredSpan(int axis) {
         sync();
 
@@ -462,7 +443,7 @@ public class XImageView extends View {
             return height + topInset + bottomInset;
         }
 
-        Image image = getImage();
+        var image = getImage();
 
         if (image != null) {
             switch (axis) {
@@ -473,9 +454,8 @@ public class XImageView extends View {
             default:
                 throw new IllegalArgumentException("Invalid axis: " + axis);
             }
-        }
-        else {
-            View view = getAltView();
+        } else {
+            var view = getAltView();
             float retValue = 0f;
 
             if (view != null) {
@@ -483,9 +463,9 @@ public class XImageView extends View {
             }
             switch (axis) {
             case View.X_AXIS:
-                return retValue + (float)(width + leftInset + rightInset);
+                return retValue + (width + leftInset + rightInset);
             case View.Y_AXIS:
-                return retValue + (float)(height + topInset + bottomInset);
+                return retValue + (height + topInset + bottomInset);
             default:
                 throw new IllegalArgumentException("Invalid axis: " + axis);
             }
@@ -493,18 +473,17 @@ public class XImageView extends View {
     }
 
     /**
-     * Determines the desired alignment for this view along an
-     * axis.  This is implemented to give the alignment to the
-     * bottom of the icon along the y axis, and the default
-     * along the x axis.
+     * Determines the desired alignment for this view along an axis. This is
+     * implemented to give the alignment to the bottom of the icon along the y axis,
+     * and the default along the x axis.
      *
      * @param axis may be either X_AXIS or Y_AXIS
-     * @return the desired alignment; this should be a value
-     *   between 0.0 and 1.0 where 0 indicates alignment at the
-     *   origin and 1.0 indicates alignment to the full span
-     *   away from the origin; an alignment of 0.5 would be the
-     *   center of the view
+     * @return the desired alignment; this should be a value between 0.0 and 1.0
+     *         where 0 indicates alignment at the origin and 1.0 indicates alignment
+     *         to the full span away from the origin; an alignment of 0.5 would be
+     *         the center of the view
      */
+    @Override
     public float getAlignment(int axis) {
         switch (axis) {
         case View.Y_AXIS:
@@ -515,21 +494,22 @@ public class XImageView extends View {
     }
 
     /**
-     * Provides a mapping from the document model coordinate space
-     * to the coordinate space of the view mapped to it.
+     * Provides a mapping from the document model coordinate space to the coordinate
+     * space of the view mapped to it.
      *
      * @param pos the position to convert
-     * @param a the allocated region to render into
+     * @param a   the allocated region to render into
      * @return the bounding box of the given position
-     * @exception BadLocationException  if the given position does not represent a
-     *   valid location in the associated document
+     * @exception BadLocationException if the given position does not represent a
+     *                                 valid location in the associated document
      * @see View#modelToView
      */
+    @Override
     public Shape modelToView(int pos, Shape a, Position.Bias b) throws BadLocationException {
         int p0 = getStartOffset();
         int p1 = getEndOffset();
         if ((pos >= p0) && (pos <= p1)) {
-            Rectangle r = a.getBounds();
+            var r = a.getBounds();
             if (pos == p1) {
                 r.x += r.width;
             }
@@ -540,18 +520,19 @@ public class XImageView extends View {
     }
 
     /**
-     * Provides a mapping from the view coordinate space to the logical
-     * coordinate space of the model.
+     * Provides a mapping from the view coordinate space to the logical coordinate
+     * space of the model.
      *
      * @param x the X coordinate
      * @param y the Y coordinate
      * @param a the allocated region to render into
-     * @return the location within the model that best represents the
-     *  given point of view
+     * @return the location within the model that best represents the given point of
+     *         view
      * @see View#viewToModel
      */
+    @Override
     public int viewToModel(float x, float y, Shape a, Position.Bias[] bias) {
-        Rectangle alloc = (Rectangle) a;
+        var alloc = (Rectangle) a;
         if (x < alloc.x + alloc.width) {
             bias[0] = Position.Bias.Forward;
             return getStartOffset();
@@ -561,21 +542,22 @@ public class XImageView extends View {
     }
 
     /**
-     * Sets the size of the view.  This should cause
-     * layout of the view if it has any layout duties.
+     * Sets the size of the view. This should cause layout of the view if it has any
+     * layout duties.
      *
-     * @param width the width &gt;= 0
+     * @param width  the width &gt;= 0
      * @param height the height &gt;= 0
      */
+    @Override
     public void setSize(float width, float height) {
         sync();
 
         if (getImage() == null) {
-            View view = getAltView();
+            var view = getAltView();
 
             if (view != null) {
-                view.setSize(Math.max(0f, width - (float)(DEFAULT_WIDTH + leftInset + rightInset)),
-                             Math.max(0f, height - (float)(topInset + bottomInset)));
+                view.setSize(Math.max(0f, width - (DEFAULT_WIDTH + leftInset + rightInset)),
+                        Math.max(0f, height - (topInset + bottomInset)));
             }
         }
     }
@@ -591,18 +573,16 @@ public class XImageView extends View {
      * Returns true if the passed in image has a non-zero width and height.
      */
     private boolean hasPixels(Image image) {
-        return image != null &&
-            (image.getHeight(imageObserver) > 0) &&
-            (image.getWidth(imageObserver) > 0);
+        return image != null && (image.getHeight(imageObserver) > 0) && (image.getWidth(imageObserver) > 0);
     }
 
     /**
-     * Returns the preferred span of the View used to display the alt text,
-     * or 0 if the view does not exist.
+     * Returns the preferred span of the View used to display the alt text, or 0 if
+     * the view does not exist.
      */
     private float getPreferredSpanFromAltView(int axis) {
         if (getImage() == null) {
-            View view = getAltView();
+            var view = getAltView();
 
             if (view != null) {
                 return view.getPreferredSpan(axis);
@@ -612,13 +592,12 @@ public class XImageView extends View {
     }
 
     /**
-     * Request that this view be repainted.
-     * Assumes the view is still at its last-drawn location.
+     * Request that this view be repainted. Assumes the view is still at its
+     * last-drawn location.
      */
     private void repaint(long delay) {
         if (container != null && fBounds != null) {
-            container.repaint(delay, fBounds.x, fBounds.y, fBounds.width,
-                               fBounds.height);
+            container.repaint(delay, fBounds.x, fBounds.y, fBounds.width, fBounds.height);
         }
     }
 
@@ -627,17 +606,16 @@ public class XImageView extends View {
      * AttributeSet.
      */
     private int getIntAttr(HTML.Attribute name, int deflt) {
-        AttributeSet attr = getElement().getAttributes();
-        if (attr.isDefined(name)) {             // does not check parents!
+        var attr = getElement().getAttributes();
+        if (attr.isDefined(name)) { // does not check parents!
             int i;
-            String val = (String)attr.getAttribute(name);
+            var val = (String) attr.getAttribute(name);
             if (val == null) {
                 i = deflt;
-            }
-            else {
-                try{
+            } else {
+                try {
                     i = Math.max(0, Integer.parseInt(val));
-                }catch( NumberFormatException x ) {
+                } catch (NumberFormatException x) {
                     i = deflt;
                 }
             }
@@ -656,7 +634,7 @@ public class XImageView extends View {
         }
         s = state;
         if ((s & RELOAD_FLAG) != 0) {
-            synchronized(this) {
+            synchronized (this) {
                 state = (state | RELOAD_FLAG) ^ RELOAD_FLAG;
             }
             setPropertiesFromAttributes();
@@ -664,16 +642,15 @@ public class XImageView extends View {
     }
 
     /**
-     * Loads the image and updates the size accordingly. This should be
-     * invoked instead of invoking <code>loadImage</code> or
-     * <code>updateImageSize</code> directly.
+     * Loads the image and updates the size accordingly. This should be invoked
+     * instead of invoking <code>loadImage</code> or <code>updateImageSize</code>
+     * directly.
      */
     private void refreshImage() {
-        synchronized(this) {
+        synchronized (this) {
             // clear out width/height/realoadimage flag and set loading flag
-            state = (state | LOADING_FLAG | RELOAD_IMAGE_FLAG | WIDTH_FLAG |
-                     HEIGHT_FLAG) ^ (WIDTH_FLAG | HEIGHT_FLAG |
-                                     RELOAD_IMAGE_FLAG);
+            state = (state | LOADING_FLAG | RELOAD_IMAGE_FLAG | WIDTH_FLAG | HEIGHT_FLAG)
+                    ^ (WIDTH_FLAG | HEIGHT_FLAG | RELOAD_IMAGE_FLAG);
             image = null;
             width = height = 0;
         }
@@ -684,9 +661,8 @@ public class XImageView extends View {
 
             // And update the size params
             updateImageSize();
-        }
-        finally {
-            synchronized(this) {
+        } finally {
+            synchronized (this) {
                 // Clear out state in case someone threw an exception.
                 state = (state | LOADING_FLAG) ^ LOADING_FLAG;
             }
@@ -694,25 +670,23 @@ public class XImageView extends View {
     }
 
     /**
-     * Loads the image from the URL <code>getImageURL</code>. This should
-     * only be invoked from <code>refreshImage</code>.
+     * Loads the image from the URL <code>getImageURL</code>. This should only be
+     * invoked from <code>refreshImage</code>.
      */
     @SuppressWarnings("rawtypes")
     private void loadImage() {
-        URL src = getImageURL();
-        Image newImage = null;
+        var src = getImageURL();
+        var newImage = (Image) null;
         if (src != null) {
             @SuppressWarnings("unchecked")
-            Dictionary<URL, Image> cache = (Dictionary)getDocument().
-                getProperty(IMAGE_CACHE_PROPERTY);
+            Dictionary<URL, Image> cache = (Dictionary) getDocument().getProperty(IMAGE_CACHE_PROPERTY);
             if (cache != null) {
                 newImage = cache.get(src);
-            }
-            else {
+            } else {
                 newImage = Toolkit.getDefaultToolkit().createImage(src);
                 if (newImage != null && getLoadsSynchronously()) {
                     // Force the image to be loaded by using an ImageIcon.
-                    ImageIcon ii = new ImageIcon();
+                    var ii = new ImageIcon();
                     ii.setImage(newImage);
                 }
             }
@@ -721,14 +695,14 @@ public class XImageView extends View {
     }
 
     /**
-     * Recreates and reloads the image.  This should
-     * only be invoked from <code>refreshImage</code>.
+     * Recreates and reloads the image. This should only be invoked from
+     * <code>refreshImage</code>.
      */
     private void updateImageSize() {
         int newWidth = 0;
         int newHeight = 0;
         int newState = 0;
-        Image newImage = getImage();
+        var newImage = getImage();
 
         if (newImage != null) {
             // Get the width/height and set the state ivar before calling
@@ -746,14 +720,12 @@ public class XImageView extends View {
             }
 
             /*
-            If synchronous loading flag is set, then make sure that the image is
-            scaled appropriately.
-            Otherwise, the ImageHandler::imageUpdate takes care of scaling the image
-            appropriately.
-            */
+             * If synchronous loading flag is set, then make sure that the image is scaled
+             * appropriately. Otherwise, the ImageHandler::imageUpdate takes care of scaling
+             * the image appropriately.
+             */
             if (getLoadsSynchronously()) {
-                Dimension d = adjustWidthHeight(image.getWidth(imageObserver),
-                                                image.getHeight(imageObserver));
+                var d = adjustWidthHeight(image.getWidth(imageObserver), image.getHeight(imageObserver));
                 newWidth = d.width;
                 newHeight = d.height;
                 newState |= (WIDTH_FLAG | HEIGHT_FLAG);
@@ -761,17 +733,13 @@ public class XImageView extends View {
 
             // Make sure the image starts loading:
             if ((newState & (WIDTH_FLAG | HEIGHT_FLAG)) != 0) {
-                Toolkit.getDefaultToolkit().prepareImage(newImage, newWidth,
-                                                         newHeight,
-                                                         imageObserver);
-            }
-            else {
-                Toolkit.getDefaultToolkit().prepareImage(newImage, -1, -1,
-                                                         imageObserver);
+                Toolkit.getDefaultToolkit().prepareImage(newImage, newWidth, newHeight, imageObserver);
+            } else {
+                Toolkit.getDefaultToolkit().prepareImage(newImage, -1, -1, imageObserver);
             }
 
             boolean createText = false;
-            synchronized(this) {
+            synchronized (this) {
                 // If imageloading failed, other thread may have called
                 // ImageLoader which will null out image, hence we check
                 // for it.
@@ -779,12 +747,10 @@ public class XImageView extends View {
                     if ((newState & WIDTH_FLAG) == WIDTH_FLAG || width == 0) {
                         width = newWidth;
                     }
-                    if ((newState & HEIGHT_FLAG) == HEIGHT_FLAG ||
-                        height == 0) {
+                    if ((newState & HEIGHT_FLAG) == HEIGHT_FLAG || height == 0) {
                         height = newHeight;
                     }
-                }
-                else {
+                } else {
                     createText = true;
                     if ((newState & WIDTH_FLAG) == WIDTH_FLAG) {
                         width = newWidth;
@@ -800,8 +766,7 @@ public class XImageView extends View {
                 // Only reset if this thread determined image is null
                 updateAltTextView();
             }
-        }
-        else {
+        } else {
             width = height = DEFAULT_HEIGHT;
             updateAltTextView();
         }
@@ -811,13 +776,13 @@ public class XImageView extends View {
      * Updates the view representing the alt text.
      */
     private void updateAltTextView() {
-        String text = getAltText();
+        var text = getAltText();
 
         if (text != null) {
             ImageLabelView newView;
 
             newView = new ImageLabelView(getElement(), text);
-            synchronized(this) {
+            synchronized (this) {
                 altView = newView;
             }
         }
@@ -829,7 +794,7 @@ public class XImageView extends View {
     private View getAltView() {
         View view;
 
-        synchronized(this) {
+        synchronized (this) {
             view = altView;
         }
         if (view != null && view.getParent() == null) {
@@ -839,53 +804,52 @@ public class XImageView extends View {
     }
 
     /**
-     * Invokes <code>preferenceChanged</code> on the event displatching
-     * thread.
+     * Invokes <code>preferenceChanged</code> on the event displatching thread.
      */
     private void safePreferenceChanged() {
         if (SwingUtilities.isEventDispatchThread()) {
-            Document doc = getDocument();
+            var doc = getDocument();
             if (doc instanceof AbstractDocument) {
-                ((AbstractDocument)doc).readLock();
+                ((AbstractDocument) doc).readLock();
             }
             preferenceChanged(null, true, true);
             if (doc instanceof AbstractDocument) {
-                ((AbstractDocument)doc).readUnlock();
+                ((AbstractDocument) doc).readUnlock();
             }
-        }
-        else {
+        } else {
             SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        safePreferenceChanged();
-                    }
-                });
+                @Override
+                public void run() {
+                    safePreferenceChanged();
+                }
+            });
         }
     }
 
     private Dimension adjustWidthHeight(int newWidth, int newHeight) {
-        Dimension d = new Dimension();
+        var d = new Dimension();
         double proportion = 0.0;
         final int specifiedWidth = getIntAttr(HTML.Attribute.WIDTH, -1);
         final int specifiedHeight = getIntAttr(HTML.Attribute.HEIGHT, -1);
         /**
-         * If either of the attributes are not specified, then calculate the
-         * proportion for the specified dimension wrt actual value, and then
-         * apply the same proportion to the unspecified dimension as well,
-         * so that the aspect ratio of the image is maintained.
+         * If either of the attributes are not specified, then calculate the proportion
+         * for the specified dimension wrt actual value, and then apply the same
+         * proportion to the unspecified dimension as well, so that the aspect ratio of
+         * the image is maintained.
          */
         if (specifiedWidth != -1 && specifiedHeight != -1) {
             newWidth = specifiedWidth;
             newHeight = specifiedHeight;
         } else if (specifiedWidth != -1 ^ specifiedHeight != -1) {
             if (specifiedWidth <= 0) {
-                proportion = specifiedHeight / ((double)newHeight);
-                newWidth = (int)(proportion * newWidth);
+                proportion = specifiedHeight / ((double) newHeight);
+                newWidth = (int) (proportion * newWidth);
                 newHeight = specifiedHeight;
             }
 
             if (specifiedHeight <= 0) {
-                proportion = specifiedWidth / ((double)newWidth);
-                newHeight = (int)(proportion * newHeight);
+                proportion = specifiedWidth / ((double) newWidth);
+                newHeight = (int) (proportion * newHeight);
                 newWidth = specifiedWidth;
             }
         }
@@ -897,27 +861,27 @@ public class XImageView extends View {
     }
 
     /**
-     * ImageHandler implements the ImageObserver to correctly update the
-     * display as new parts of the image become available.
+     * ImageHandler implements the ImageObserver to correctly update the display as
+     * new parts of the image become available.
      */
-    private class ImageHandler implements ImageObserver {
+    private class ImageHandler implements ImageObserver
+    {
         // This can come on any thread. If we are in the process of reloading
         // the image and determining our state (loading == true) we don't fire
         // preference changed, or repaint, we just reset the fWidth/fHeight as
         // necessary and return. This is ok as we know when loading finishes
         // it will pick up the new height/width, if necessary.
-        public boolean imageUpdate(Image img, int flags, int x, int y,
-                                   int newWidth, int newHeight ) {
-            if (img != image && img != disabledImage ||
-                image == null || getParent() == null) {
+        @Override
+        public boolean imageUpdate(Image img, int flags, int x, int y, int newWidth, int newHeight) {
+            if (img != image && img != disabledImage || image == null || getParent() == null) {
 
                 return false;
             }
 
             // Bail out if there was an error:
-            if ((flags & (ABORT|ERROR)) != 0) {
+            if ((flags & (ABORT | ERROR)) != 0) {
                 repaint(0);
-                synchronized(XImageView.this) {
+                synchronized (XImageView.this) {
                     if (image == img) {
                         // Be sure image hasn't changed since we don't
                         // initialy synchronize
@@ -945,28 +909,26 @@ public class XImageView extends View {
             if (image == img) {
                 // Resize image if necessary:
                 short changed = 0;
-                if ((flags & ImageObserver.HEIGHT) != 0 && !getElement().
-                      getAttributes().isDefined(HTML.Attribute.HEIGHT)) {
+                if ((flags & ImageObserver.HEIGHT) != 0
+                        && !getElement().getAttributes().isDefined(HTML.Attribute.HEIGHT)) {
                     changed |= 1;
                 }
-                if ((flags & ImageObserver.WIDTH) != 0 && !getElement().
-                      getAttributes().isDefined(HTML.Attribute.WIDTH)) {
+                if ((flags & ImageObserver.WIDTH) != 0
+                        && !getElement().getAttributes().isDefined(HTML.Attribute.WIDTH)) {
                     changed |= 2;
                 }
 
                 /**
-                 * If the image properties (height and width) have been loaded,
-                 * then figure out if scaling is necessary based on the
-                 * specified HTML attributes.
+                 * If the image properties (height and width) have been loaded, then figure out
+                 * if scaling is necessary based on the specified HTML attributes.
                  */
-                if (((flags & ImageObserver.HEIGHT) != 0) &&
-                    ((flags & ImageObserver.WIDTH) != 0)) {
-                        Dimension d = adjustWidthHeight(newWidth, newHeight);
-                        newWidth = d.width;
-                        newHeight = d.height;
-                        changed |= 3;
+                if (((flags & ImageObserver.HEIGHT) != 0) && ((flags & ImageObserver.WIDTH) != 0)) {
+                    var d = adjustWidthHeight(newWidth, newHeight);
+                    newWidth = d.width;
+                    newHeight = d.height;
+                    changed |= 3;
                 }
-                synchronized(XImageView.this) {
+                synchronized (XImageView.this) {
                     if ((changed & 1) == 1 && (state & HEIGHT_FLAG) == 0) {
                         height = newHeight;
                     }
@@ -987,23 +949,22 @@ public class XImageView extends View {
             }
 
             // Repaint when done or when new pixels arrive:
-            if ((flags & (FRAMEBITS|ALLBITS)) != 0) {
+            if ((flags & (FRAMEBITS | ALLBITS)) != 0) {
                 repaint(0);
-            }
-            else if ((flags & SOMEBITS) != 0 && sIsInc) {
+            } else if ((flags & SOMEBITS) != 0 && sIsInc) {
                 repaint(sIncRate);
             }
             return ((flags & ALLBITS) == 0);
         }
     }
 
-
     /**
-     * ImageLabelView is used if the image can't be loaded, and
-     * the attribute specified an alt attribute. It overriden a handle of
-     * methods as the text is hardcoded and does not come from the document.
+     * ImageLabelView is used if the image can't be loaded, and the attribute
+     * specified an alt attribute. It overriden a handle of methods as the text is
+     * hardcoded and does not come from the document.
      */
-    private class ImageLabelView extends InlineView {
+    private class ImageLabelView extends InlineView
+    {
         private Segment segment;
         private Color fg;
 
@@ -1016,10 +977,11 @@ public class XImageView extends View {
             segment = new Segment(text.toCharArray(), 0, text.length());
         }
 
+        @Override
         public void paint(Graphics g, Shape a) {
             // Don't use supers paint, otherwise selection will be wrong
             // as our start/end offsets are fake.
-            GlyphPainter painter = getGlyphPainter();
+            var painter = getGlyphPainter();
 
             if (painter != null) {
                 g.setColor(getForeground());
@@ -1027,6 +989,7 @@ public class XImageView extends View {
             }
         }
 
+        @Override
         public Segment getText(int p0, int p1) {
             if (p0 < 0 || p1 > segment.array.length) {
                 throw new RuntimeException("ImageLabelView: Stale view");
@@ -1036,19 +999,23 @@ public class XImageView extends View {
             return segment;
         }
 
+        @Override
         public int getStartOffset() {
             return 0;
         }
 
+        @Override
         public int getEndOffset() {
             return segment.array.length;
         }
 
+        @Override
         public View breakView(int axis, int p0, float pos, float len) {
             // Don't allow a break
             return this;
         }
 
+        @Override
         public Color getForeground() {
             View parent;
             if (fg == null && (parent = getParent()) != null) {
@@ -1056,7 +1023,7 @@ public class XImageView extends View {
                 AttributeSet attr = parent.getAttributes();
 
                 if (attr != null && (doc instanceof StyledDocument)) {
-                    fg = ((StyledDocument)doc).getForeground(attr);
+                    fg = ((StyledDocument) doc).getForeground(attr);
                 }
             }
             return fg;

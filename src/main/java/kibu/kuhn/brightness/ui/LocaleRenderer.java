@@ -1,50 +1,39 @@
 package kibu.kuhn.brightness.ui;
 
 import java.awt.Component;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
+
+import javax.inject.Inject;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.JList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-class LocaleRenderer extends DefaultListCellRenderer {
+import kibu.kuhn.brightness.utils.Injection;
 
-  private static final long serialVersionUID = 1L;
+@Injection
+public class LocaleRenderer extends DefaultListCellRenderer
+{
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(LocaleRenderer.class);
+    private static final long serialVersionUID = 1L;
 
-  private static Map<String, Icon> icons = new HashMap<>();
+    @Inject
+    private Icons icons;
 
-  @Override
-  public Component getListCellRendererComponent(JList<? extends Object> list, Object value,
-      int index, boolean isSelected, boolean cellHasFocus) {
+    @Override
+    public Component getListCellRendererComponent(JList<? extends Object> list, Object value, int index,
+            boolean isSelected, boolean cellHasFocus) {
 
-    var locale = (Locale) value;
-    var component = super.getListCellRendererComponent(list, locale.getDisplayLanguage(), index, isSelected,
-        cellHasFocus);
-    var icon = getIcon(locale);
-    setIcon(icon);
-    return component;
-  }
-
-  private Icon getIcon(Locale locale) {
-    var iconname = locale.getLanguage() + 25;
-    if (icons.containsKey(iconname)) {
-      return icons.get(iconname);
+        var locale = (Locale) value;
+        var component = super.getListCellRendererComponent(list, locale.getDisplayLanguage(), index, isSelected,
+                cellHasFocus);
+        var icon = getIcon(locale);
+        setIcon(icon);
+        return component;
     }
 
-    Icon icon = null;
-    try {
-      icon = Icons.getIcon(iconname);
-    } catch (Exception ex) {
-      LOGGER.warn("Cannot load icon {}", iconname);
-    } finally {
-      icons.put(iconname, icon);
+    private Icon getIcon(Locale locale) {
+        var iconname = locale.getLanguage() + 25;
+        return icons.getIcon(iconname);
     }
-    return icon;
-  }
 
 }

@@ -40,15 +40,15 @@ public class ColorTempModelTest
     public void testColorTempValues() {
         assertThat(colorTemps).size().isEqualTo(111);
         ColorTemp ct = colorTemps.get(0);
-        assertThat(ct.getRed()).isEqualTo(255 / 1000f);
-        assertThat(ct.getGreen()).isEqualTo(56 / 1000f);
-        assertThat(ct.getBlue()).isEqualTo(0f);
+        assertThat(ct.getRed()).isEqualTo(255);
+        assertThat(ct.getGreen()).isEqualTo(56);
+        assertThat(ct.getBlue()).isEqualTo(0);
         assertThat(ct.getKelvin()).isEqualTo(1000);
 
         ct = colorTemps.get(110);
-        assertThat(ct.getRed()).isEqualTo(195 / 1000f);
-        assertThat(ct.getGreen()).isEqualTo(209 / 1000f);
-        assertThat(ct.getBlue()).isEqualTo(255 / 1000f);
+        assertThat(ct.getRed()).isEqualTo(195);
+        assertThat(ct.getGreen()).isEqualTo(209);
+        assertThat(ct.getBlue()).isEqualTo(255);
         assertThat(ct.getKelvin()).isEqualTo(12000);
 
     }

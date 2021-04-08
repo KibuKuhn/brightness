@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.Consumer;
 
+import javax.inject.Inject;
 import javax.swing.AbstractAction;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
@@ -45,7 +46,9 @@ import kibu.kuhn.brightness.prefs.IPreferencesService;
 import kibu.kuhn.brightness.ui.component.OpenCloseCheckBox;
 import kibu.kuhn.brightness.ui.component.XButton;
 import kibu.kuhn.brightness.ui.component.XCheckBox;
+import kibu.kuhn.brightness.utils.Injection;
 
+@Injection
 public class SettingsMenu
 {
 
@@ -61,8 +64,16 @@ public class SettingsMenu
     private LocaleAction messageAction;
     private Consumer<? super ComponentEvent> windowCloseAction;
     private ColorTempPane colorTempPane;
+    @Inject
+    private IPreferencesService preferences;
+    @Inject
+    private Icons icons;
+    @Inject
+    private I18n i18n;
+    @Inject
+    private IEventbus eventbus;
 
-    SettingsMenu() {
+    public SettingsMenu() {
         init();
     }
 
@@ -76,16 +87,16 @@ public class SettingsMenu
         }
 
         messageAction.setEnabled(false);
-        LookAndFeelInfo laf = IPreferencesService.get().getLaf();
+        LookAndFeelInfo laf = preferences.getLaf();
         lafs.setSelectedItem(laf);
-        Locale locale = IPreferencesService.get().getLocale();
+        Locale locale = preferences.getLocale();
         locales.setSelectedItem(locale);
         messageAction.setEnabled(true);
         dialog.setVisible(visible);
     }
 
     private void init() {
-        dialog = new JDialog(null, IGui.getI18n("settingsmenu.title"), APPLICATION_MODAL);
+        dialog = new JDialog(null, i18n.get("settingsmenu.title"), APPLICATION_MODAL);
 
         dialog.addWindowListener(new WindowAdapter() {
             @Override
@@ -95,7 +106,7 @@ public class SettingsMenu
         });
 
         // l&f
-        dialog.setIconImage(Icons.getImage("brightness36_filled"));
+        dialog.setIconImage(icons.getImage("brightness36_filled"));
         var pane = dialog.getContentPane();
         pane.setLayout(new GridBagLayout());
         var constraints = new GridBagConstraints();
@@ -106,7 +117,7 @@ public class SettingsMenu
         constraints.gridheight = 1;
         constraints.fill = NONE;
         constraints.anchor = WEST;
-        pane.add(new JLabel(IGui.getI18n("settingsmenu.laf")), constraints);
+        pane.add(new JLabel(i18n.get("settingsmenu.laf")), constraints);
 
         constraints.insets.right = 2;
         constraints.anchor = EAST;
@@ -131,7 +142,7 @@ public class SettingsMenu
         constraints.gridwidth = 1;
         constraints.weightx = 0;
         constraints.fill = NONE;
-        pane.add(new JLabel(IGui.getI18n("settingsmenu.locale")), constraints);
+        pane.add(new JLabel(i18n.get("settingsmenu.locale")), constraints);
 
         constraints.insets.right = 2;
         constraints.anchor = EAST;
@@ -158,8 +169,8 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        var darkMode = new XCheckBox(IGui.getI18n("settingsmenu.darkmode"));
-        darkMode.setSelected(IPreferencesService.get().isDarkMode());
+        var darkMode = new XCheckBox(i18n.get("settingsmenu.darkmode"));
+        darkMode.setSelected(preferences.isDarkMode());
         darkMode.addActionListener(new DarkModeAction());
         pane.add(darkMode, constraints);
 
@@ -173,8 +184,8 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        var adjustLocation = new XCheckBox(IGui.getI18n("settingsmenu.adjust.mainmenu.location"));
-        adjustLocation.setSelected(IPreferencesService.get().isMainMenuLocationUpdatEnabled());
+        var adjustLocation = new XCheckBox(i18n.get("settingsmenu.adjust.mainmenu.location"));
+        adjustLocation.setSelected(preferences.isMainMenuLocationUpdatEnabled());
         adjustLocation.addActionListener(new AdjustLocationAction());
         pane.add(adjustLocation, constraints);
 
@@ -188,13 +199,13 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        var allUnits = new XCheckBox(IGui.getI18n("settingsmenu.allunits"));
-        allUnits.setSelected(IPreferencesService.get().isAllUnits());
+        var allUnits = new XCheckBox(i18n.get("settingsmenu.allunits"));
+        allUnits.setSelected(preferences.isAllUnits());
         allUnits.addActionListener(new AllUnitsAction());
         pane.add(allUnits, constraints);
 
         // color temp
-        var colorTemp = new OpenCloseCheckBox("Farbtemperatur");
+        var colorTemp = new OpenCloseCheckBox(i18n.get("settingsmenu.colortemp"));
         colorTemp.addActionListener(new ColorTempAction());
         pane.add(colorTemp, constraints);
         colorTempPane = new ColorTempPane();
@@ -213,7 +224,7 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        var help = new XButton(new HelpAction(event -> IEventbus.get().post(new HelpEvent())));
+        var help = new XButton(new HelpAction(event -> eventbus.post(new HelpEvent())));
         pane.add(help, constraints);
 
         // Glue
@@ -306,8 +317,8 @@ public class SettingsMenu
                 return;
             }
 
-            IPreferencesService.get().saveLocale((Locale) locales.getSelectedItem());
-            showMessage(IGui.getI18n("settingsmenu.message"));
+            preferences.saveLocale((Locale) locales.getSelectedItem());
+            showMessage(i18n.get("settingsmenu.message"));
         }
     }
 
@@ -322,7 +333,7 @@ public class SettingsMenu
             try {
                 UIManager.setLookAndFeel(laf.getClassName());
                 SwingUtilities.updateComponentTreeUI(dialog.getRootPane());
-                IPreferencesService.get().saveLaf(laf);
+                preferences.saveLaf(laf);
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
                     | UnsupportedLookAndFeelException ex) {
                 LOGGER.error(ex.getMessage(), ex);
@@ -340,7 +351,7 @@ public class SettingsMenu
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            IPreferencesService.get().setMainMenuLocationUpdateEnabled(((JCheckBox) e.getSource()).isSelected());
+            preferences.setMainMenuLocationUpdateEnabled(((JCheckBox) e.getSource()).isSelected());
         }
     }
 
@@ -349,8 +360,8 @@ public class SettingsMenu
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            IPreferencesService.get().setDarkMode(((JCheckBox) e.getSource()).isSelected());
-            Icons.clearCache();
+            preferences.setDarkMode(((JCheckBox) e.getSource()).isSelected());
+            icons.clearCache();
         }
     }
 
@@ -360,8 +371,8 @@ public class SettingsMenu
         @Override
         public void actionPerformed(ActionEvent e) {
             boolean selected = ((JCheckBox) e.getSource()).isSelected();
-            IPreferencesService.get().setAllUnits(selected);
-            IEventbus.get().post(new AllUnitsEvent(selected));
+            preferences.setAllUnits(selected);
+            eventbus.post(new AllUnitsEvent(selected));
         }
     }
 
