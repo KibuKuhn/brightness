@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import kibu.kuhn.brightness.event.XEventQueue;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
+import kibu.kuhn.brightness.utils.IExitHandler;
 
 public class Gui implements IGui
 {
@@ -30,6 +31,8 @@ public class Gui implements IGui
     private IPreferencesService preferencesService;
     @Inject
     private I18n i18n;
+    @Inject
+    private IExitHandler exitHandler;
 
     private TrayIcon trayIcon;
 
@@ -88,16 +91,16 @@ public class Gui implements IGui
         trayIcon.setToolTip(message);
         trayIcon.displayMessage(i18n.get("trayicon.error.caption"),
                 message + String.format(i18n.get("trayicon.error.ex"), th.getLocalizedMessage()), MessageType.ERROR);
-        trayIcon.addMouseListener(new ExitHandler());
+        trayIcon.addMouseListener(new ExitAdapter());
     }
 
-    private static class ExitHandler extends MouseAdapter
+    private class ExitAdapter extends MouseAdapter
     {
 
         @Override
         public void mouseClicked(MouseEvent e) {
             if (e.getButton() == MouseEvent.BUTTON1 && e.getModifiersEx() == MouseEvent.CTRL_DOWN_MASK) {
-                System.exit(0);
+                exitHandler.exit();
             }
         }
 

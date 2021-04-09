@@ -12,4 +12,6 @@ public interface IDisplayUnitManager
     void updateBrightness(DisplayUnit unit);
 
     void updateColorTemp(ColorTemp colorTemp);
+
+    void applyColorTemp(ColorTemp ct);
 }

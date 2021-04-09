@@ -1,10 +1,6 @@
 package kibu.kuhn.brightness.ui;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.swing.SpinnerNumberModel;
 
@@ -15,46 +11,23 @@ public class ColorTempModel extends SpinnerNumberModel
 
     private static final long serialVersionUID = 1L;
 
-    private static List<ColorTemp> values;
+    private static final int STEP = 100;
 
-    static {
-        readValues();
-    }
+    private List<ColorTemp> values;
+    private int minimum;
 
-    private static int minimum;
-
-    private static int maximum;
-
-    private static int step = 100;
-
-    public ColorTempModel() {
-        setMaximum(maximum);
+    public ColorTempModel(List<ColorTemp> values) {
+        this.values = values;
+        setMaximum(this.values.get(this.values.size() - 1).getKelvin());
+        minimum = this.values.get(0).getKelvin();
         setMinimum(minimum);
-        setStepSize(step);
+        setStepSize(STEP);
         setValue(getMinimum());
     }
 
     public ColorTemp getColorTemp() {
         int value = ((Number) getValue()).intValue();
-        value = (value - minimum) / step;
+        value = (value - minimum) / STEP;
         return values.get(value);
-    }
-
-    private static void readValues() {
-        try (var stream = ColorTempModel.class.getResourceAsStream("/colorTempValues");) {
-            var reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
-            //@formatter:off
-            values = reader.lines()
-                           .filter(line -> !line.strip().isEmpty())
-                           .map(line -> line.strip())
-                           .map(ColorTemp::of)
-                           .collect(Collectors.toList());
-            //@formatter:on
-            minimum = values.get(0).getKelvin();
-            maximum = values.get(values.size() - 1).getKelvin();
-
-        } catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        }
     }
 }

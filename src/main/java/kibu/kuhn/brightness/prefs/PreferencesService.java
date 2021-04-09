@@ -22,6 +22,7 @@ public class PreferencesService implements IPreferencesService
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PreferencesService.class);
 
+    private static final int DEFAULT_COLOR_TEMP_KELVIN = 5000;
     private static final String DARK_MODE = "darkMode";
     private static final String MAIN_MENU_LOCATION = "mainMenuLocation";
     private static final String MAIN_MENU_LOCATION_UPDATE = "mainMenuLocationUpdate";
@@ -35,6 +36,7 @@ public class PreferencesService implements IPreferencesService
     private static final String COLOR_TEMP_AUTO_MODE = "colorTempAutoMode";
     private static final String COLOR_TEMP_FROM_TIME = "colorTempFromTime";
     private static final String COLOR_TEMP_TO_TIME = "colorTempToTime";
+    private static final String DEFAULT_COLOR_TEMP_KELVIN_KEY = "defaultColorTempKelvinKey";
 
     private static final DateTimeFormatter COLOR_TEMP_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -158,8 +160,13 @@ public class PreferencesService implements IPreferencesService
     }
 
     @Override
+    public int getDefaultColorTempKelvin() {
+        return getPreferences().getInt(DEFAULT_COLOR_TEMP_KELVIN_KEY, DEFAULT_COLOR_TEMP_KELVIN);
+    }
+
+    @Override
     public int getColorTempKelvin() {
-        return getPreferences().getInt(COLOR_TEMP, 5000);
+        return getPreferences().getInt(COLOR_TEMP, DEFAULT_COLOR_TEMP_KELVIN);
     }
 
     @Override
@@ -197,5 +204,10 @@ public class PreferencesService implements IPreferencesService
     public LocalTime getColorTempToTime() {
         String to = getPreferences().get(COLOR_TEMP_TO_TIME, LocalTime.now().format(COLOR_TEMP_TIME_FORMATTER));
         return LocalTime.parse(to, COLOR_TEMP_TIME_FORMATTER);
+    }
+
+    @Override
+    public void setDefaultColorTempKelvin(int kelvin) {
+        getPreferences().putInt(DEFAULT_COLOR_TEMP_KELVIN_KEY, kelvin);
     }
 }

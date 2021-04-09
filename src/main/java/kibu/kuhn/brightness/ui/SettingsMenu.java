@@ -46,13 +46,14 @@ import kibu.kuhn.brightness.prefs.IPreferencesService;
 import kibu.kuhn.brightness.ui.component.OpenCloseCheckBox;
 import kibu.kuhn.brightness.ui.component.XButton;
 import kibu.kuhn.brightness.ui.component.XCheckBox;
+import kibu.kuhn.brightness.utils.IExitHandler;
 import kibu.kuhn.brightness.utils.Injection;
 
 @Injection
 public class SettingsMenu
 {
 
-    private static final int HEIGHT = 400;
+    private static final int HEIGHT = 450;
     private static final int WIDTH = 400;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SettingsMenu.class);
@@ -72,6 +73,8 @@ public class SettingsMenu
     private I18n i18n;
     @Inject
     private IEventbus eventbus;
+    @Inject
+    private IExitHandler exitHandler;
 
     public SettingsMenu() {
         init();
@@ -249,9 +252,7 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        var exit = new XButton(new ExitAction(event -> System.exit(0)));
-
-        pane.add(exit, constraints);
+        pane.add(new XButton(new ExitAction(event -> exitHandler.exit())), constraints);
 
         constraints.gridx = 0;
         constraints.gridy = RELATIVE;
