@@ -59,4 +59,6 @@ public interface IPreferencesService
 
     LocalTime getColorTempToTime();
 
+    int getDefaultColorTempKelvin();
+
 }

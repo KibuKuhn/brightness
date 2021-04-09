@@ -22,6 +22,7 @@ public class PreferencesService implements IPreferencesService
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PreferencesService.class);
 
+    private static final int DEFAULT_COLOR_TEMP_KELVIN = 5000;
     private static final String DARK_MODE = "darkMode";
     private static final String MAIN_MENU_LOCATION = "mainMenuLocation";
     private static final String MAIN_MENU_LOCATION_UPDATE = "mainMenuLocationUpdate";
@@ -158,8 +159,13 @@ public class PreferencesService implements IPreferencesService
     }
 
     @Override
+    public int getDefaultColorTempKelvin() {
+        return DEFAULT_COLOR_TEMP_KELVIN;
+    }
+
+    @Override
     public int getColorTempKelvin() {
-        return getPreferences().getInt(COLOR_TEMP, 5000);
+        return getPreferences().getInt(COLOR_TEMP, DEFAULT_COLOR_TEMP_KELVIN);
     }
 
     @Override

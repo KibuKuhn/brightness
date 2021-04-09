@@ -24,7 +24,7 @@ import javax.swing.JSpinner;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import kibu.kuhn.brightness.displayunit.IDisplayUnitManager;
+import kibu.kuhn.brightness.colortemp.IColorTempService;
 import kibu.kuhn.brightness.domain.ColorTemp;
 import kibu.kuhn.brightness.prefs.IPreferencesService;
 import kibu.kuhn.brightness.ui.component.XCheckBox;
@@ -53,22 +53,22 @@ public class ColorTempPane extends JPanel
     @Inject
     private I18n i18n;
     @Inject
-    private IDisplayUnitManager displayUnitManager;
+    private IColorTempService colorTempService;
 
     public ColorTempPane() {
         initUI();
         init();
-
     }
 
     private void init() {
+        colorTempSteps.setModel(new ColorTempModel(colorTempService.getColorTempValues()));
         boolean mode = preferences.isColorTemp();
         boolean currentMode = nightShiftCheckbox.isSelected();
-        if (mode == currentMode) {
-            nightShiftCheckbox.getAction().actionPerformed(new ActionEvent(nightShiftCheckbox, ACTION_PERFORMED, ""));
-        } else {
+        if (mode != currentMode || !mode && !currentMode) {
             nightShiftCheckbox.setSelected(mode);
+            nightShiftCheckbox.getAction().actionPerformed(new ActionEvent(nightShiftCheckbox, ACTION_PERFORMED, ""));
         }
+
         int kelvin = preferences.getColorTempKelvin();
         colorTempSteps.getModel().setValue(kelvin);
 
@@ -93,7 +93,7 @@ public class ColorTempPane extends JPanel
         constraints.weighty = 0;
         constraints.fill = NONE;
         constraints.gridwidth = REMAINDER;
-        nightShiftCheckbox = new XCheckBox(new NightShiftAction());
+        nightShiftCheckbox = new XCheckBox(new ColorTempAction());
         add(nightShiftCheckbox, constraints);
 
         constraints.weightx = 0;
@@ -104,8 +104,7 @@ public class ColorTempPane extends JPanel
         colorTempSteps = new JSpinner();
         var dim = new Dimension(100, 24);
         colorTempSteps.setPreferredSize(dim);
-        colorTempSteps.addChangeListener(new ColorTempAdapter());
-        colorTempSteps.setModel(new ColorTempModel());
+        colorTempSteps.addChangeListener(new ColorTempChangeAdapter());
         add(colorTempSteps, constraints);
 
         constraints.weightx = 1;
@@ -185,7 +184,7 @@ public class ColorTempPane extends JPanel
         preferences.setColorTempToTime(((SpinnerHourModel) toTime.getModel()).getValue().getTime());
     }
 
-    private class ColorTempAdapter implements ChangeListener
+    private class ColorTempChangeAdapter implements ChangeListener
     {
 
         @Override
@@ -193,7 +192,7 @@ public class ColorTempPane extends JPanel
             var spinner = (JSpinner) e.getSource();
             var colorTemp = getColorTemp(spinner);
             displayColorTemp(colorTemp);
-            displayUnitManager.updateColorTemp(colorTemp);
+            colorTempService.updateColorTemp(colorTemp);
         }
     }
 
@@ -230,11 +229,11 @@ public class ColorTempPane extends JPanel
 
     }
 
-    private class NightShiftAction extends AbstractAction
+    private class ColorTempAction extends AbstractAction
     {
         private static final long serialVersionUID = 1L;
 
-        private NightShiftAction() {
+        private ColorTempAction() {
             putValue(NAME, i18n.get("colorTempPane.nightshift"));
         }
 
@@ -242,6 +241,7 @@ public class ColorTempPane extends JPanel
         public void actionPerformed(ActionEvent e) {
             var button = (JCheckBox) e.getSource();
             setAllEnabled(button.isSelected());
+            colorTempService.setColorTempEnabled(button.isSelected());
         }
 
     }

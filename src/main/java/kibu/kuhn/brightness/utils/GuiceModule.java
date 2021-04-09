@@ -1,10 +1,11 @@
 package kibu.kuhn.brightness.utils;
 
+import static com.google.inject.Scopes.SINGLETON;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -13,6 +14,8 @@ import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 
+import kibu.kuhn.brightness.colortemp.ColorTempService;
+import kibu.kuhn.brightness.colortemp.IColorTempService;
 import kibu.kuhn.brightness.displayunit.DisplayUnitManager;
 import kibu.kuhn.brightness.displayunit.IDisplayUnitManager;
 import kibu.kuhn.brightness.event.Eventbus;
@@ -53,12 +56,13 @@ public class GuiceModule extends AbstractModule implements TypeListener
     @Override
     protected void configure() {
         binder().bindListener(Matchers.any(), this);
-        bind(Icons.class).to(IconsFactory.class).in(Singleton.class);
-        bind(IPreferencesService.class).to(PreferencesService.class).in(Singleton.class);
-        bind(I18n.class).to(I18nService.class).in(Singleton.class);
-        bind(IEventbus.class).to(Eventbus.class).in(Singleton.class);
-        bind(IDisplayUnitManager.class).to(DisplayUnitManager.class).in(Singleton.class);
-        bind(IGui.class).to(Gui.class).in(Singleton.class);
+        bind(Icons.class).to(IconsFactory.class).in(SINGLETON);
+        bind(IPreferencesService.class).to(PreferencesService.class).in(SINGLETON);
+        bind(I18n.class).to(I18nService.class).in(SINGLETON);
+        bind(IEventbus.class).to(Eventbus.class).in(SINGLETON);
+        bind(IDisplayUnitManager.class).to(DisplayUnitManager.class).asEagerSingleton();
+        bind(IGui.class).to(Gui.class).in(SINGLETON);
+        bind(IColorTempService.class).to(ColorTempService.class).in(SINGLETON);
     }
 
     @Override

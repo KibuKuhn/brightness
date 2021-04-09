@@ -52,7 +52,7 @@ import kibu.kuhn.brightness.utils.Injection;
 public class SettingsMenu
 {
 
-    private static final int HEIGHT = 400;
+    private static final int HEIGHT = 450;
     private static final int WIDTH = 400;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SettingsMenu.class);

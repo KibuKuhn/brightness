@@ -19,6 +19,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,8 @@ public class DisplayUnitManager implements IDisplayUnitManager
     private ActionListener brightnessTimerEventConsumer = this::handleBrightnessTimerEvent;
     private ActionListener colorTempTimerEventConsumer = this::handleColorTempTimerEvent;
 
-    public DisplayUnitManager() {
+    @PostConstruct
+    public void init() {
         unitNames = queryUnitNames();
     }
 
@@ -134,7 +137,7 @@ public class DisplayUnitManager implements IDisplayUnitManager
         unitNames.parallelStream().forEach(unitConsumer);
     }
 
-    void processUnit(Supplier<List<String>> commandSupplier) {
+    private void processUnit(Supplier<List<String>> commandSupplier) {
         try {
             var lines = startProcess(commandSupplier.get());
             lines.forEach(LOGGER::info);
@@ -145,13 +148,18 @@ public class DisplayUnitManager implements IDisplayUnitManager
 
     private void handleColorTempTimerEvent(ActionEvent event) {
         var timer = (DisplayUnitTimer) event.getSource();
-        LOGGER.debug("Unit={}, value={}", timer.getUnitName(), timer.getValue());
         var colorTemp = (ColorTemp) timer.getValue();
+        var unitName = timer.getUnitName();
+        LOGGER.debug("Unit={}, value={}", unitName, colorTemp);
 
-        if (timer.getUnitName() == null) {
-            processAllUnits(unitName -> processUnit(() -> getColorTempCommandString(colorTemp, unitName)));
+        processColorTemp(colorTemp, unitName);
+    }
+
+    private void processColorTemp(ColorTemp colorTemp, String unitName) {
+        if (unitName == null) {
+            processAllUnits(uName -> processUnit(() -> getColorTempCommandString(colorTemp, uName)));
         } else {
-            processUnit(() -> getColorTempCommandString(colorTemp, timer.getUnitName()));
+            processUnit(() -> getColorTempCommandString(colorTemp, unitName));
         }
     }
 
@@ -176,6 +184,11 @@ public class DisplayUnitManager implements IDisplayUnitManager
             return;
         }
         timer.restartWith(unit.getValue());
+    }
+
+    @Override
+    public void applyColorTemp(ColorTemp ct) {
+        unitNames.forEach(uname -> processColorTemp(ct, uname));
     }
 
 }
