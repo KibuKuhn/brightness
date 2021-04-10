@@ -213,8 +213,7 @@ public class SettingsMenu
         pane.add(colorTemp, constraints);
         colorTempPane = new ColorTempPane();
         colorTempPane.setVisible(false);
-        constraints.weighty = 1;
-        constraints.fill = BOTH;
+        constraints.fill = HORIZONTAL;
         pane.add(colorTempPane, constraints);
 
         // help

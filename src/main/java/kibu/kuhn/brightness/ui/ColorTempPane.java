@@ -130,22 +130,27 @@ public class ColorTempPane extends JPanel
         add(autoMode, constraints);
         add(manualMode, constraints);
         // time settings
+        JPanel p = new JPanel(new GridBagLayout());
         constraints.weightx = 0;
         constraints.gridwidth = 1;
-        add(new JLabel(i18n.get("colorTempPane.from")), constraints);
+        constraints.insets.left = 0;
+        p.add(new JLabel(i18n.get("colorTempPane.from")), constraints);
         constraints.insets.left = 10;
         fromTime = new JSpinner(new SpinnerHourModel());
         fromTime.setPreferredSize(dim);
-        add(fromTime, constraints);
+        p.add(fromTime, constraints);
         constraints.insets.left = 20;
-        add(new JLabel(i18n.get("colorTempPane.to")), constraints);
+        p.add(new JLabel(i18n.get("colorTempPane.to")), constraints);
         toTime = new JSpinner(new SpinnerHourModel());
         toTime.setPreferredSize(dim);
         constraints.insets.left = 10;
         constraints.weightx = 1;
         constraints.gridwidth = REMAINDER;
-        add(toTime, constraints);
-
+        constraints.gridheight = REMAINDER;
+        p.add(toTime, constraints);
+        constraints.gridheight = 1;
+        constraints.insets.left = 20;
+        add(p, constraints);
         // filler
         constraints.insets.left = 0;
         constraints.insets.bottom = 0;
