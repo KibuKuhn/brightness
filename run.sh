@@ -7,5 +7,5 @@ do
     args="$args $arg"
 done
 
-#java -Ddelay=5000 -jar brightness-1.0.0.jar &
-java -jar brightness-1.0.0.jar &
+#java -Ddelay=5000 -jar brightness-2.0.0.jar &
+java -jar brightness-2.0.0.jar &
