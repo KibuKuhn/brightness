@@ -24,7 +24,7 @@ public class LocaleRenderer extends DefaultListCellRenderer
             boolean isSelected, boolean cellHasFocus) {
 
         var locale = (Locale) value;
-        var component = super.getListCellRendererComponent(list, locale.getDisplayLanguage(), index, isSelected,
+        var component = super.getListCellRendererComponent(list, locale.getDisplayLanguage(locale), index, isSelected,
                 cellHasFocus);
         var icon = getIcon(locale);
         setIcon(icon);

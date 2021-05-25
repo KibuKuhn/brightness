@@ -53,7 +53,7 @@ import kibu.kuhn.brightness.utils.Injection;
 public class SettingsMenu
 {
 
-    private static final int HEIGHT = 450;
+    private static final int HEIGHT = 550;
     private static final int WIDTH = 400;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SettingsMenu.class);
@@ -65,6 +65,7 @@ public class SettingsMenu
     private LocaleAction messageAction;
     private Consumer<? super ComponentEvent> windowCloseAction;
     private ColorTempPane colorTempPane;
+    private XCheckBox darkMode;
     @Inject
     private IPreferencesService preferences;
     @Inject
@@ -75,9 +76,22 @@ public class SettingsMenu
     private IEventbus eventbus;
     @Inject
     private IExitHandler exitHandler;
+    private OpenCloseCheckBox colorTemp;
 
     public SettingsMenu() {
-        init();
+        initUI();
+        initData();
+        dialog.pack();
+        dialog.setSize(WIDTH, HEIGHT);
+        dialog.setLocationRelativeTo(null);
+    }
+
+    private void initData() {
+        darkMode.setSelected(preferences.isDarkMode());
+        colorTemp.setSelected(preferences.isColorTemp());
+        if (preferences.isColorTemp()) {
+            colorTemp.fireActionPerformed(new ActionEvent(colorTemp, ActionEvent.ACTION_PERFORMED, ""));
+        }
     }
 
     void setDialogVisible(boolean visible) {
@@ -98,7 +112,7 @@ public class SettingsMenu
         dialog.setVisible(visible);
     }
 
-    private void init() {
+    private void initUI() {
         dialog = new JDialog(null, i18n.get("settingsmenu.title"), APPLICATION_MODAL);
 
         dialog.addWindowListener(new WindowAdapter() {
@@ -157,7 +171,7 @@ public class SettingsMenu
         locales.setPreferredSize(preferredSize);
         locales.setMinimumSize(preferredSize);
         locales.setRenderer(new LocaleRenderer());
-        locales.setModel(createLocalesModel());
+        locales.setModel(createLocaleModel());
         messageAction = new LocaleAction();
         locales.addActionListener(messageAction);
         pane.add(locales, constraints);
@@ -172,9 +186,7 @@ public class SettingsMenu
         constraints.gridwidth = REMAINDER;
         constraints.gridheight = 1;
         constraints.fill = NONE;
-        var darkMode = new XCheckBox(i18n.get("settingsmenu.darkmode"));
-        darkMode.setSelected(preferences.isDarkMode());
-        darkMode.addActionListener(new DarkModeAction());
+        darkMode = new XCheckBox(new DarkModeAction());
         pane.add(darkMode, constraints);
 
         // adjust
@@ -208,8 +220,7 @@ public class SettingsMenu
         pane.add(allUnits, constraints);
 
         // color temp
-        var colorTemp = new OpenCloseCheckBox(i18n.get("settingsmenu.colortemp"));
-        colorTemp.addActionListener(new ColorTempAction());
+        colorTemp = new OpenCloseCheckBox(new ColorTempAction());
         pane.add(colorTemp, constraints);
         colorTempPane = new ColorTempPane();
         colorTempPane.setVisible(false);
@@ -265,17 +276,13 @@ public class SettingsMenu
         infoLabel.setMaximumSize(preferredSize);
         infoLabel.setPreferredSize(preferredSize);
         pane.add(infoLabel, constraints);
-
-        dialog.pack();
-        dialog.setSize(WIDTH, HEIGHT);
-        dialog.setLocationRelativeTo(null);
     }
 
     private void saveSettings() {
         colorTempPane.save();
     }
 
-    private ComboBoxModel<Locale> createLocalesModel() {
+    private ComboBoxModel<Locale> createLocaleModel() {
         DefaultComboBoxModel<Locale> model = new DefaultComboBoxModel<>();
         model.addElement(Locale.GERMAN);
         model.addElement(Locale.ENGLISH);
@@ -355,8 +362,14 @@ public class SettingsMenu
         }
     }
 
-    private class DarkModeAction implements ActionListener
+    private class DarkModeAction extends AbstractAction
     {
+
+        private static final long serialVersionUID = 1L;
+
+        private DarkModeAction() {
+            putValue(NAME, i18n.get("settingsmenu.darkmode"));
+        }
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -376,8 +389,14 @@ public class SettingsMenu
         }
     }
 
-    private class ColorTempAction implements ActionListener
+    private class ColorTempAction extends AbstractAction
     {
+
+        private static final long serialVersionUID = 1L;
+
+        private ColorTempAction() {
+            putValue(NAME, i18n.get("settingsmenu.colortemp"));
+        }
 
         @Override
         public void actionPerformed(ActionEvent e) {

@@ -63,4 +63,12 @@ public interface IPreferencesService
 
     void setDefaultColorTempKelvin(int kelvin);
 
+    void setLatitude(double latitude);
+
+    void setLongitude(double longitude);
+
+    double getLatitude();
+
+    double getLongitude();
+
 }

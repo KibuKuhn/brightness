@@ -13,8 +13,7 @@ public interface IColorTempService
 
     void updateColorTemp(ColorTemp colorTemp);
 
+    void applyDefaultColorTemp(ColorTemp colorTemp);
+
     void setColorTempEnabled(boolean selected);
-
-    void setTestMode(boolean mode);
-
 }

@@ -37,6 +37,8 @@ public class PreferencesService implements IPreferencesService
     private static final String COLOR_TEMP_FROM_TIME = "colorTempFromTime";
     private static final String COLOR_TEMP_TO_TIME = "colorTempToTime";
     private static final String DEFAULT_COLOR_TEMP_KELVIN_KEY = "defaultColorTempKelvinKey";
+    private static final String LATITUDE = "latitude";
+    private static final String LONGITUDE = "longitude";
 
     private static final DateTimeFormatter COLOR_TEMP_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -209,5 +211,25 @@ public class PreferencesService implements IPreferencesService
     @Override
     public void setDefaultColorTempKelvin(int kelvin) {
         getPreferences().putInt(DEFAULT_COLOR_TEMP_KELVIN_KEY, kelvin);
+    }
+
+    @Override
+    public void setLatitude(double latitude) {
+        getPreferences().putDouble(LATITUDE, latitude);
+    }
+
+    @Override
+    public void setLongitude(double longitude) {
+        getPreferences().putDouble(LONGITUDE, longitude);
+    }
+
+    @Override
+    public double getLatitude() {
+        return getPreferences().getDouble(LATITUDE, 0);
+    }
+
+    @Override
+    public double getLongitude() {
+        return getPreferences().getDouble(LONGITUDE, 0);
     }
 }

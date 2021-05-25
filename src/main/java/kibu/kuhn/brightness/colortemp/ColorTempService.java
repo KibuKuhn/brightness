@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -25,21 +26,51 @@ public class ColorTempService implements IColorTempService
     private static final Logger LOGGER = LoggerFactory.getLogger(ColorTempService.class);
 
     private ActionListener checkColorTempTimeListener = this::checkColorTempTime;
+
+    private Supplier<Boolean> colorTempTimeDecision;
+
     private boolean colorTempApplied;
     private ColorTempTimer colorTempTimer;
     private List<ColorTemp> colorTempValues;
-    private boolean testMode;
 
     @Inject
     private IPreferencesService preferences;
     @Inject
     private IDisplayUnitManager displayUnitManager;
 
+    private Supplier<Boolean> manualDecision = () -> {
+        var fromTime = preferences.getColorTempFromTime();
+        var toTime = preferences.getColorTempToTime();
+        if (fromTime.equals(toTime)) {
+            return false;
+        }
+
+        var now = LocalDate.now();
+        var from = LocalDateTime.from(fromTime.atDate(now));
+        var to = LocalDateTime.from(toTime.atDate(now));
+        if (to.isBefore(from)) {
+            to = to.plusDays(1);
+        }
+
+        var current = LocalDateTime.now();
+        if (current.isBefore(from)) {
+            return false;
+        }
+        if (!current.isAfter(to)) {
+            return true;
+        }
+        return false;
+    };
+
+    private Supplier<Boolean> autoDecision = () -> {
+        return SunriseSunset.isNight(preferences.getLatitude(), preferences.getLongitude());
+    };
+
     @PostConstruct
     public void init() {
         readColorTempValues();
         colorTempApplied = true;
-        checkColorTemp();
+        colorTempTimeDecision = preferences.isColorTempAutoMode() ? autoDecision : manualDecision;
     }
 
     private void checkColorTemp() {
@@ -47,23 +78,17 @@ public class ColorTempService implements IColorTempService
             return;
         }
 
-        if (preferences.isColorTempAutoMode()) {
-            LOGGER.info("Color temp auro mode not yet supported");
-        } else {
-            colorTempTimer = new ColorTempTimer(checkColorTempTimeListener);
-            colorTempTimer.start();
-        }
+        colorTempTimer = new ColorTempTimer(checkColorTempTimeListener);
+        colorTempTimer.start();
     }
 
     @Override
     public void updateColorTemp(ColorTemp colorTemp) {
-        if (!testMode) {
-            if (!preferences.isColorTemp()) {
-                return;
-            }
-            if (!isColorTempTime()) {
-                return;
-            }
+        if (!preferences.isColorTemp()) {
+            return;
+        }
+        if (!isColorTempTime()) {
+            return;
         }
 
         displayUnitManager.updateColorTemp(colorTemp);
@@ -101,31 +126,6 @@ public class ColorTempService implements IColorTempService
         return colorTempValues;
     }
 
-    @Override
-    public boolean isColorTempTime() {
-        var fromTime = preferences.getColorTempFromTime();
-        var toTime = preferences.getColorTempToTime();
-        if (fromTime.equals(toTime)) {
-            return false;
-        }
-
-        var now = LocalDate.now();
-        var from = LocalDateTime.from(fromTime.atDate(now));
-        var to = LocalDateTime.from(toTime.atDate(now));
-        if (to.isBefore(from)) {
-            to = to.plusDays(1);
-        }
-
-        var current = LocalDateTime.now();
-        if (current.isBefore(from)) {
-            return false;
-        }
-        if (!current.isAfter(to)) {
-            return true;
-        }
-        return false;
-    }
-
     private void readColorTempValues() {
         try (var stream = ColorTempService.class.getResourceAsStream("/colorTempValues");) {
             var reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
@@ -156,12 +156,16 @@ public class ColorTempService implements IColorTempService
     }
 
     @Override
-    public void setTestMode(boolean mode) {
-        this.testMode = mode;
-        if (!testMode) {
-            colorTempApplied = true;
-            checkColorTempTime(null);
+    public void applyDefaultColorTemp(ColorTemp colorTemp) {
+        if (!preferences.isColorTemp()) {
+            return;
         }
+
+        displayUnitManager.updateColorTemp(colorTemp);
     }
 
+    @Override
+    public boolean isColorTempTime() {
+        return colorTempTimeDecision.get();
+    }
 }
