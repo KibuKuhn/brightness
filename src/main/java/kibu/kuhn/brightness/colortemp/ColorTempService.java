@@ -71,15 +71,17 @@ public class ColorTempService implements IColorTempService
         readColorTempValues();
         colorTempApplied = true;
         colorTempTimeDecision = preferences.isColorTempAutoMode() ? autoDecision : manualDecision;
+        checkColorTemp();
     }
 
     private void checkColorTemp() {
         if (!preferences.isColorTemp()) {
             return;
         }
-
-        colorTempTimer = new ColorTempTimer(checkColorTempTimeListener);
-        colorTempTimer.start();
+        if (colorTempTimer == null) {
+            colorTempTimer = new ColorTempTimer(checkColorTempTimeListener);
+            colorTempTimer.start();
+        }
     }
 
     @Override
